@@ -1,0 +1,168 @@
+---
+title: "Assignment 1"
+author: "JRGLAY001, GMDSBO006 and MGRKHE001"
+date: today
+format:
+  pdf:
+    pdfengine: pdflatex
+    header-includes: |
+      \newcommand{\B}[1]{\mathbf{#1}}
+---
+
+\newpage
+
+Model formulation
+$$y = X\beta + e$$
+where $$e \sim \mathcal{N}(0, \sigma^2 I_{n})$$
+
+$$\mathbb{E}[y] = \mathbb{E}[X\beta + e]
+	= \mathbb{E}[X\beta] + \mathbb{E}[e]
+	= X\beta + 0
+	= X\beta$$
+$$\mathrm{Var}[y] = \mathrm{Var}[X\beta + e]
+	= \mathrm{Var}[X\beta] + \mathrm{Var}[e] + 2cov(X\beta, e)
+	= 0 + \sigma^2I_{n} + 0
+	= \sigma^2I_{n}$$
+
+Therefore $$y \sim \mathcal{N}(X\beta, \sigma^2I_{n})$$
+
+Density of Y
+$$f_{Y}(y) = (2\pi\sigma^2)^{-\frac{n}{2}} exp(-\frac{1}{2\sigma^2} (y - X\beta)^{T}(y - X\beta))$$
+$$f_{Y}(y) = (2\pi\sigma^2)^{-\frac{n}{2}} exp(-\frac{1}{2\sigma^2} (y^{T}y - 2\beta^{T}X^{T}y + \beta^{T} X^{T}X \beta))$$
+
+Likelihood
+$$L(\beta, y, X) \propto (\sigma^2)^{-\frac{n}{2}} exp(-\frac{1}{2\sigma^2} (y^{T}y - 2\beta^{T}X^{T}y + \beta^{T}X^{T}X\beta))$$
+
+Since $M = M^{-1} = I_{k+1}$
+
+Then the prior distribution is
+$$[\beta|\sigma^2] \sim \mathcal{N}_{k+1}(\tilde{\beta}, \sigma^2 M^{-1})$$
+
+Prior density
+$$\pi(\beta|\sigma^2)
+	= (2\pi)^{-\frac{k+1}{2}}
+	\det(\sigma^2M^{-1})^{-\frac{1}{2}}
+	exp(-\frac{1}{2\sigma^2}(\beta - \tilde{\beta})^{T} M (\beta - \tilde{\beta}))$$
+$$\pi(\beta|\sigma^2)
+	= (2\pi)^{-\frac{k+1}{2}}
+	\det(\sigma^2M^{-1})^{-\frac{1}{2}}
+	exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta -2\beta^{T}M\tilde{\beta} + \tilde{\beta^{T}}M\tilde{\beta}))$$
+$$\pi(\beta|\sigma^2)
+	\propto  exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta -2\beta^{T}M\tilde{\beta} + \tilde{\beta^{T}}M\tilde{\beta}))$$
+
+Prior distribution
+$$[\sigma^2] \sim \mathcal{IG}(a, b)$$
+
+Prior density
+
+$$\pi(\sigma^2)
+	= \frac{b^{a}}{\Gamma{(a)}} \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
+$$\pi(\sigma^2)
+	\propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
+
+\newpage
+
+\textbf{Assuming that $\sigma^2$ is known}
+
+Prior
+$$\pi(\beta|\sigma^2)
+	\propto exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta -2\beta^{T}M\tilde{\beta}))$$
+
+Likelihood
+$$L(\beta|\sigma^2)
+	\propto exp(-\frac{1}{2\sigma^2} (-2\beta^{T}X^{T}y + \beta^{T}X^{T}X\beta))$$
+
+Posterior
+$$\pi(\beta| y, X)
+\propto exp(-\frac{1}{2\sigma^2} (\beta^{T}(M + X^{T}X)\beta -2\beta^{T}(X^{T}y + M\tilde{\beta})))$$
+
+Recall that $(X^{T}X) \hat{\beta} = X^{T}y$
+$$\pi(\beta| y, X)
+	\propto exp(-\frac{1}{2\sigma^2} (\beta^{T}(M + X^{T}X)\beta -2\beta^{T}((X^{T}X) \hat{\beta} + M\tilde{\beta})))$$
+
+Let $A = M + X^{T}X$ and $b = (X^{T}X) \hat{\beta} + M\tilde{\beta}$
+
+Completing the square using the following identity
+$$\beta^{T}A\beta - 2\beta^{T}b
+	= (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}$$ 
+where $\mu_{\beta} = A^{-1}b$
+
+$$\pi(\beta| y, X)
+	\propto exp(-\frac{1}{2\sigma^2} 
+	((\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}))$$
+
+but $\mu_{\beta}^{T}A\mu_{\beta}$ is independent of $\beta$
+$$\pi(\beta| y, X) \propto exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))$$
+$$\pi(\beta| y, X) \propto exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}(M + X^{T}X)(\beta - \mu_{\beta}))$$
+
+meaning $$[\beta| \sigma^2, y, X] \sim \mathcal{N}_{k+1}(\mu_{\beta}, \sigma^2(M + X^{T}X)^{-1})$$
+where $$\mu_{\beta} = (M + X^{T}X)^{-1} ((X^{T}X) \hat{\beta} + M\tilde{\beta})$$
+
+\newpage
+
+Joint distribution
+$$J = [\beta, \sigma^2| y, X]$$
+
+Consider
+$$P = L(\beta, y, X)[\beta| \sigma^2]$$
+$$P \propto (\sigma^2)^{-\frac{n}{2}} 
+	exp(-\frac{1}{2\sigma^2}(y^{T}y -2\beta^{T}X^{T}y + \beta^{T}X^{T}X\beta)) 
+	(\sigma^2)^{-\frac{k+1}{2}}
+	exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta - 2\beta^{T}M\tilde{\beta} + \tilde{\beta^{T}}M\tilde{\beta}))$$
+$$P \propto (\sigma^2)^{-\frac{n+k+1}{2}} 
+	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta}))
+	exp(-\frac{1}{2\sigma^2} (\beta^{T}(M + X^{T}X)\beta -2\beta^{T}((X^{T}X) \hat{\beta} + M\tilde{\beta}))$$
+Let $A = M + X^{T}X$ and $b = (X^{T}X) \hat{\beta} + M\tilde{\beta}$
+
+Completing the square using the following identity
+$$\beta^{T}A\beta - 2\beta^{T}b
+	= (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}$$ 
+where $\mu_{\beta} = A^{-1}b$
+$$P \propto (\sigma^2)^{-\frac{n+k+1}{2}} 
+	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta}))
+	exp(-\frac{1}{2\sigma^2} ((\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}))$$
+$$P \propto (\sigma^2)^{-\frac{n+k+1}{2}} 
+	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}A\mu_{\beta}))
+	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))$$
+
+$$[\sigma^2]
+	\propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
+
+$$J \propto L(\beta, y, X)[\beta| \sigma^2][\sigma^2]$$
+$$J \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}A\mu_{\beta}))
+	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))
+	exp(-\frac{b}{\sigma^2})$$
+Let $A_{2} = y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}A\mu_{\beta}$
+$$J \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
+	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))$$
+
+$$[\sigma^2| y, X] = \int_{\beta} [\beta, \sigma^2| y, X]\, d\beta$$
+$$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
+	\int_{\beta}exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) \, d\beta$$
+Recall
+$$\int_{\beta}
+	(2\pi)^{-\frac{k+1}{2}}det((\frac{1}{\sigma^2}(M + X^{T}X))^{-1})^{-\frac{1}{2}}
+	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta})) \, d\beta
+	= 1$$
+then
+$$I = \int_{\beta}
+	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) \, d\beta 
+	= (2\pi)^{\frac{k+1}{2}}det((\frac{1}{\sigma^2}(M + X^{T}X))^{-1})^{\frac{1}{2}})$$
+
+We know that $det(aA) = a^{k}det(A)$, where $A$ is a $k$ by $k$ matrix.
+
+$$I = (2\pi)^{\frac{k+1}{2}}
+(\sigma^2)^{\frac{k+1}{2}}
+det((M + X^{T}X)^{-1})^{\frac{1}{2}}$$
+$$I \propto (\sigma^2)^\frac{k+1}{2}$$
+$$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
+	(\sigma^2)^{\frac{k+1}{2}}$$
+$$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n}{2} + a) - 1} 
+	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))$$
+meaning
+$$[\sigma^2| y, X] \sim \mathcal{IG}(a + \frac{n}{2}, b + \frac{A_{2}}{2})$$
+where $a = 1$, $b = 1$ and $A_{2} = y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}(M + X^{T}X)\mu_{\beta}$
