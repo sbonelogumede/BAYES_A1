@@ -1,0 +1,196 @@
+---
+format: pdf
+editor: visual
+---
+
+### Question 2a
+
+Given:
+
+$Z_i|Y_i \sim{Ber}(Y_ip_i)=(Y_ip_i)^z(1-y_ip_i)^(1-z)$
+
+$Y_i \sim {Ber}(\theta_i)=(\theta_i)^y(1-\theta_i)^(1-y)$
+
+Derivation of equation 2:
+
+$P(Z_i=0)=\sum_{y=0}^{1}P(Z_i=0|Y_i=y)P(Y_i=y)$
+
+$=(p_i)^0(1-pi)^1(\theta_i)^1(1-\theta_i)^0+(0p_i)^0(1-0p_i)^1(\theta_i)^0(1-\theta_i)^1$
+
+$=(1-p_i)(\theta_i) +(1-\theta_i)$ $=1-p_i\theta_i$
+
+$P(Y_i=1)=(\theta_i)^1(1-\theta_i)^0$
+
+$=\theta_i$
+
+$P(Z_i=0|Y_i=1)=(p_i)^0(1-p_i)^1$
+
+Therefore :
+
+$P(Y_i=1|Z_i=0) =\frac{P(Z_i=0|Y_i=1)P(Y_i)} {P(Z_i=0)}$
+
+$=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
+
+Derivation of equation 4 :
+
+We searched cell $i$ and the fisherman wasn't found ,update the of finding the fisherman based on the fact that we did not detect the fisherman.We are told $i$ does not equal $j$.
+
+Probability of being in cell $j$ is not directly affected by cell $i$'s search.However, we still adjust the probabilities for all cells by a normalization factor in the denominator to ensure that the total sum of probabilities remains 1.\
+\
+$=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
+
+Since $(1-p_i)$ only applies to cell $i$ we do not include it in the equation
+
+Therefore:
+
+$\theta{j,new}=\frac{\theta_{j,old}}{1-p_i\theta_{i,old}}$
+
+### Question 2b
+
+Equation 2 is the posterior probability of not detecting the fisherman given that the fisherman is indeed in the cell.Although we don't detect the fisherman he may still be in the cell.So we reduce the porbability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( $\theta_{i,old}$).
+
+### Question 2c
+
+```{r ,include=FALSE}
+#### Required Functions provided by Jake####
+set.seed(123)
+library(ggplot2)
+library(MASS)
+
+#### Data Generating Functions ####
+
+generate_lost <- function(grid_size, nsims){
+  
+  # Function to generate the prior distribution for the 
+  # location of the lost fisherman
+  # Args: 
+  #       grid_size: the dimensions of the square search grid
+  #       nsims: number of samples to base the prior distribution on
+  
+  mu_vec  <- c(grid_size/2, grid_size/2)
+  sig_mat <- matrix(c(2, 1, 5, 5), 2,2)
+  
+  dat <- mvrnorm(nsims, mu_vec, sig_mat)
+  dat <- round(abs(dat))
+  head(dat)
+  summary(as.data.frame(dat))
+  prior <- matrix(rep(0,grid_size^2), grid_size, grid_size)
+  for (i in 1:NROW(dat)){
+    
+    if (dat[i,1] < grid_size & dat[i,2] < grid_size){
+      prior[dat[i,1], dat[i,2]] <- prior[dat[i,1], dat[i,2]] + 1
+    }
+    
+  }
+  prior <- prior/sum(prior)
+  return(prior)
+}
+
+generate_fisherman <- function(grid_size){
+  
+  # Function to generate the true location of the lost fisherman.
+  # This should not effect the search decision in any way!! It is unkown
+  # to the search crew.
+  # Args: 
+  #       grid_size: the dimensions of the square search grid
+
+  mu_vec  <- c(grid_size/2, grid_size/2)
+  sig_mat <- matrix(c(2, 1, 5, 5), 2,2)
+  
+  location  <- round(mvrnorm(1, mu_vec, sig_mat))
+  true_grid <- matrix(rep(0, grid_size^2), grid_size, grid_size)
+  true_grid[location[1], location[2]] <- 1
+  
+  return(true_grid)
+}
+
+#### Simulation ####
+
+search_size <- 20
+unifs <- runif(search_size^2, min = 0.6, max = 0.9)
+##Step 2 - gain detection distribution
+detect_pr <- matrix(unifs, ncol = search_size)
+
+```
+
+```{r ,echo=FALSE}
+##step 1 - prior of experts
+prior <- generate_lost(search_size,10000)
+#get fishermans location 
+fish_grid <- generate_fisherman(search_size)
+cell <- which(fish_grid == 1,arr.ind=TRUE)
+rowf <- cell[1]
+colf <- cell[2]
+
+max_hours <- 48
+post_tracker <- numeric(max_hours)
+fishermanfound <- FALSE
+prior1 <- prior
+###at the start your prior is your posterior
+posterior <- prior
+df_prior <- expand.grid(x = 1:search_size, y = 1:search_size)
+df_prior$value <- as.vector(prior1)
+ggplot(df_prior, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "red", high = "blue") +
+  coord_fixed() +
+  labs(title = "Heat map at step 1", fill = "Probability") +
+  theme_minimal()
+```
+
+```{r,include=FALSE}
+for (i in 1:max_hours){
+  ##step 3 - merge 2 distributions  
+  ##posterior initially prior ,we use the previous posterior as the new prior
+  grid <- posterior*detect_pr
+  ##step 4 - search cell with highest probabibility
+  #cell_check <- which(grid == 1,arr.ind=TRUE)
+  ##finding the index with the highest probability
+  cell_check <- arrayInd(which.max(grid), dim(grid))
+  row <- cell_check[1]
+  col <- cell_check[2]
+ ##check if fisherman is in the cell
+  if(fish_grid[row,col]==1){
+    ##use detection pr check if we find fisherman given he is in the cell.
+    ##1 sample,1 trial using highest probability of cells
+    detected <- rbinom(1, 1, detect_pr[row, col])
+  }
+    else {
+      detected <- 0
+    }
+  post_tracker[i] <- posterior[rowf,colf]
+  
+  #step 5 - if not detected update using Bayes
+  if (detected == 1) {
+    #cat("Fisherman here", i, "in cell (", row, ",", col, ")\n")
+    fishermanfound <- TRUE
+    break
+  }
+  pi <- detect_pr[row,col]
+  posterior[row,col] <- ((1-pi)*posterior[row,col])/(1 - pi * posterior[row, col])
+  posterior[-row, -col] <- posterior[-row, -col] / (1 - pi * posterior[row, col])
+  ##normalising posterior values
+  posterior <- posterior/sum(posterior)
+}
+```
+
+```{r,echo=FALSE}
+df_posterior <- expand.grid(x = 1:search_size, y = 1:search_size)
+df_posterior$value <- as.vector(posterior)
+ggplot(df_posterior, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "orange", high = "purple") +
+  coord_fixed() +
+  labs(title = "Heatmap at final search step", fill = "Probability") +
+  theme_minimal()
+
+```
+
+```{r,echo=FALSE}
+df_posttrack <- data.frame(hours=1:max_hours,posterior = post_tracker)
+ggplot(df_posttrack,aes(x=hours,y=posterior))+geom_line(color="skyblue")+labs(title = "Posterior Probability of occurrence for cell that fisherman is in over time",x = "Hours",y = "Posterior Probability") + theme_minimal()
+```
+
+### Question 2d
+
+We would simply generate the prior and not combine the prior distribution and search detection.This means we will search any cell at random and not the one with the highest probability of successful detection .The occurrence probability will not need to be updated as the detection does not depend on location anymore.The posterior will also just be equal to the previous prior as no additional information is gained from varying detection probabilities.
