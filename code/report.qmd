@@ -2,14 +2,34 @@
 title: "Assignment 1"
 author: "JRGLAY001, GMDSBO006 and MGRKHE001"
 date: today
-format:
+format: 
   pdf:
     pdfengine: pdflatex
-    header-includes: |
-      \newcommand{\B}[1]{\mathbf{#1}}
+    include-in-header: 
+      text: |
+        \usepackage[a4paper, left=0.3in, right=0.3in, top=0.3in, bottom=0.3in]{geometry}
+        \extrafloats{500}
+        \usepackage{etex}
+        \usepackage{tabularx}
+        \maxdeadcycles=1000
+        \extrarowheight=5pt
+        \maxdimen=16383.99999pt
+        \renewcommand{\baselinestretch}{0.65}
+        \newcommand{\B}[1]{\mathbf{#1}}
 ---
 
+::: {#fig-dm}
+
+![](../images/cooking.jpg)
+
+Let me cook!
+
+:::
+
 \newpage
+
+# Question 1
+## a)
 
 Model formulation
 $$y = X\beta + e$$
@@ -166,3 +186,138 @@ $$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n}{2} + a) - 1}
 meaning
 $$[\sigma^2| y, X] \sim \mathcal{IG}(a + \frac{n}{2}, b + \frac{A_{2}}{2})$$
 where $a = 1$, $b = 1$ and $A_{2} = y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}(M + X^{T}X)\mu_{\beta}$
+
+## b)
+```{r setup, echo = FALSE, warning = FALSE}
+# Packages required
+suppressPackageStartupMessages(require(cubature))
+suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(MASS))
+suppressPackageStartupMessages(require(MCMCpack))
+```
+
+```{r data, echo = FALSE}
+# Lets simulate some data
+set.seed(2021)
+
+n <- 150 # Number of data points
+X.c <- data.frame(matrix(rnorm(5*n), ncol=5))
+colnames(X.c) <-  c("X1","X2","X3","X4", "X5")
+X <- as.matrix(cbind(1, X.c)) # Design matrix
+e <- matrix(rnorm(n), ncol=1) # Errors
+beta.true <- matrix(c(1,0,10,0,2,-3), ncol=1)
+Y <- X%*%beta.true + e # Observations
+
+k <- nrow(beta.true)
+a <- 1
+b <- 1
+M <- diag(nrow = k)
+beta.hat <- solve(t(X)%*%X) %*% t(X) %*% Y
+mu.beta <- solve(M + t(X)%*%X) %*% ((t(X)%*%X) %*% beta.hat)
+A2 <- t(Y) %*% Y - t(mu.beta) %*% (M + t(X)%*%X) %*% mu.beta
+
+palette <- c('lightskyblue', 'lightseagreen', 'palegreen', 'plum3', 'lightsalmon', 
+				 'khaki2', 'black', 'firebrick', 'hotpink')
+```
+
+```{r IG, echo = FALSE}
+# Sampling from the Inverse Gamma
+Sigma2.samples <- rinvgamma(n=50000, shape=(a + n/2), scale=(b + A2/2))
+
+kable(head(Sigma2.samples), 
+		digits = 7,
+		caption = 'First six rows of $\\sigma^2$ sample values', 
+		col.names = c('$\\sigma^2$'))
+```
+
+```{r sigma, echo = FALSE}
+# Inverse Gamma Sample
+hist(x = Sigma2.samples,
+	  main = expression(paste('Histogram of ', sigma^2)), 
+	  xlab = expression(sigma^2),
+	  ylab = 'Density',
+	  col = palette[1],
+	  freq = FALSE,
+	  breaks = 30)
+```
+
+```{r MVN, echo = FALSE}
+# Sampling from the Multivariate Normal distribution
+MVN <- function(S, E, A){
+	# S is the \sigma^2 sample 
+	# E is the mean vector
+	# A = (M + X^{T}X)^{-1}
+	n <- length(S) # \sigma^2 sample size
+	MAT <- matrix(0, nrow=n, ncol=6) # Stores the generated samples
+	for(i in 1:n){
+		# For each sigma^2 we condition on it to obtain a beta estimate
+		MAT[i, ] <- mvrnorm(n=1, mu=E, Sigma=S[i]*A)
+	}
+	return(MAT)
+}
+
+# Beta sample
+A <- solve(M + t(X) %*% X)
+Beta.samples <- mcmc(MVN(S=Sigma2.samples, E=mu.beta, A=A))
+
+col_labels <- c("$\\beta_0$", "$\\beta_1$", "$\\beta_2$", 
+					 "$\\beta_3$", "$\\beta_4$", "$\\beta_5$")
+
+kable(head(Beta.samples), 
+		digits = 3, 
+		caption = 'First six rows of the $\\beta$ sample values', 
+		col.names = col_labels)
+```
+
+\newpage
+
+## c)
+### i)
+```{r trace, echo = FALSE, fig.width=8, fig.height=10}
+# Trace plots
+par(mfrow = c(3, 2))
+for(i in 1:6){
+	traceplot(x = Beta.samples[, i], 
+				 main = bquote('Trace plot of ' ~ beta[.(i-1)]),
+				 col = palette[i])
+}
+```
+
+All of the trace plots appear as random scatter, indicating stationarity. This provides evidence for the convergence of the Markov Chains.
+
+\newpage
+
+### ii)
+```{r density, echo = FALSE, fig.width=8, fig.height=10}
+# Density plots
+par(mfrow = c(3, 2))
+for(i in 1:6){
+	hist(x = Beta.samples[, i],
+		  main = bquote('Histogram of' ~ beta[.(i-1)]),
+		  xlab = bquote(beta[.(i-1)]),
+		  ylab = 'Density',
+		  col = palette[i],
+		  freq = FALSE,
+		  breaks = 30)
+	abline(v = mean(Beta.samples[, i]), col = palette[7], lwd = 2)
+	abline(v = beta.true[i], col = palette[8], lwd = 2)
+	abline(v = quantile(x = Beta.samples[, i], 0.025), col = palette[9], lwd = 2)
+	abline(v = quantile(x = Beta.samples[, i], 0.975), col = palette[9], lwd = 2)
+	legend(x = 'topright', 
+			 legend = c(bquote('Sample avarage' ~ beta[.(i-1)]), 
+			 			  bquote('True' ~ beta[.(i-1)]), 
+			 			  '95% credibility interval'),
+			 col = palette[7:9],
+			 lty = 1,
+			 lwd = 2)
+}
+```
+The beta coefficients are approximately normally distributed.
+
+Confidence interval are the relative frequencies of stating valid bounds if you were to re-sample the data.
+Credibility intervals are the probability that the true parameter is within the stated bounds.
+
+\newpage
+
+# Question 2
+
