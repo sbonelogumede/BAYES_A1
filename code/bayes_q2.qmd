@@ -7,9 +7,9 @@ editor: visual
 
 Given:
 
-$Z_i|Y_i \sim{Ber}(Y_ip_i)=(Y_ip_i)^z(1-y_ip_i)^(1-z)$
+$Z_i|Y_i \sim{Ber}(Y_ip_i)=(Y_ip_i)^z(1-y_ip_i)^{1-z}$
 
-$Y_i \sim {Ber}(\theta_i)=(\theta_i)^y(1-\theta_i)^(1-y)$
+$Y_i \sim {Ber}(\theta_i)=(\theta_i)^y(1-\theta_i)^{1-y}$
 
 Derivation of equation 2:
 
@@ -33,13 +33,13 @@ $=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
 
 Derivation of equation 4 :
 
-We searched cell $i$ and the fisherman wasn't found ,update the of finding the fisherman based on the fact that we did not detect the fisherman.We are told $i$ does not equal $j$.
+We know the posterior probability for the case when the cell $i$ contains the fisherman but we fail detect him is :
 
-Probability of being in cell $j$ is not directly affected by cell $i$'s search.However, we still adjust the probabilities for all cells by a normalization factor in the denominator to ensure that the total sum of probabilities remains 1.\
-\
-$=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
+$\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
 
-Since $(1-p_i)$ only applies to cell $i$ we do not include it in the equation
+We searched cell $i$ and the fisherman wasn't found so we update the probability distribution based on this new information.In other words we are required to update all probabilities so they sum to 1 as required by a valid probability distribution.
+
+The probability of being in cell $j(where j \neq i)$ is not directly affected by cell $i$'s search,so the numerator remains $\theta_{j,old}$.However, we still adjust the probabilities for all cells by a normalization factor of $1-p_i\theta_i$ as seen in the denominator of the posterior probability to ensure that the total sum of probabilities remains 1.\
 
 Therefore:
 
@@ -47,7 +47,7 @@ $\theta{j,new}=\frac{\theta_{j,old}}{1-p_i\theta_{i,old}}$
 
 ### Question 2b
 
-Equation 2 is the posterior probability of not detecting the fisherman given that the fisherman is indeed in the cell.Although we don't detect the fisherman he may still be in the cell.So we reduce the porbability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( $\theta_{i,old}$).
+Equation 2 is the posterior probability of not detecting the fisherman given that the fisherman is indeed in the cell.Although we don't detect the fisherman he may still be in the cell.So we reduce the probability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( probability of occurence$\theta_{i,old}$).Therefore Equation 3 shows how the occurrence probability is adjusted over time as we gain more evidence through the bayesian search.
 
 ### Question 2c
 
@@ -113,7 +113,7 @@ detect_pr <- matrix(unifs, ncol = search_size)
 
 ```
 
-```{r ,echo=FALSE}
+```{r ,include=FALSE}
 ##step 1 - prior of experts
 prior <- generate_lost(search_size,10000)
 #get fishermans location 
@@ -128,14 +128,7 @@ fishermanfound <- FALSE
 prior1 <- prior
 ###at the start your prior is your posterior
 posterior <- prior
-df_prior <- expand.grid(x = 1:search_size, y = 1:search_size)
-df_prior$value <- as.vector(prior1)
-ggplot(df_prior, aes(x = x, y = y, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient(low = "red", high = "blue") +
-  coord_fixed() +
-  labs(title = "Heat map at step 1", fill = "Probability") +
-  theme_minimal()
+
 ```
 
 ```{r,include=FALSE}
@@ -174,23 +167,55 @@ for (i in 1:max_hours){
 }
 ```
 
-```{r,echo=FALSE}
+```{r,echo=FALSE,message=FALSE, warning=FALSE, fig.fullwidth=TRUE}
+suppressMessages(library(patchwork))
+fishermancell <- data.frame(x=colf,y=rowf)
+fishermancell$label <- "True location"
+df_prior <- expand.grid(x = 1:search_size, y = 1:search_size)
+df_prior$value <- as.vector(prior1)
+plot1 <- ggplot(df_prior, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "red", high = "blue") +
+  coord_fixed() +
+  geom_tile(data = fishermancell, aes(x = x, y = y,color=label),
+            fill = NA, size = 0.5, show.legend = TRUE)+scale_color_manual(name = "", values = c("True location" = "yellow")) +
+  labs(x='Column',y="Row",subtitle="First step", fill = "Probability") +
+  theme_minimal()+theme(
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+
+
 df_posterior <- expand.grid(x = 1:search_size, y = 1:search_size)
 df_posterior$value <- as.vector(posterior)
-ggplot(df_posterior, aes(x = x, y = y, fill = value)) +
+plot2 <- ggplot(df_posterior, aes(x = x, y = y, fill = value)) +
   geom_tile() +
-  scale_fill_gradient(low = "orange", high = "purple") +
+  scale_fill_gradient(low = "red", high = "blue") +
   coord_fixed() +
-  labs(title = "Heatmap at final search step", fill = "Probability") +
-  theme_minimal()
+  geom_tile(data = fishermancell, aes(x = x, y = y,color=label),
+            fill = NA, size = 0.5, show.legend = TRUE)+scale_color_manual(name = "", values = c("True location" = "yellow")) +
+  labs(x='Column',y="Row", subtitle="Final step",fill = "Probability") +
+  theme_minimal()+theme(
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+library(patchwork)
 
-```
+full_plot <- (plot1 + plot2) +
+  plot_layout(ncol = 2,guides = "collect") +  
+  plot_annotation(
+    title = "Posterior probabilities of occurrence during Bayesian search",
+    theme = theme(plot.title = element_text(
+        hjust = 0.5,
+        size = 12,
+        face = "bold",
+        margin = margin(b = 15)  ),
+      legend.position = "right",legend.box.margin = margin(l = 20), 
+      plot.margin = margin(t = 20, r = 10, b = 10, l = 10))
+  )
 
-```{r,echo=FALSE}
-df_posttrack <- data.frame(hours=1:max_hours,posterior = post_tracker)
-ggplot(df_posttrack,aes(x=hours,y=posterior))+geom_line(color="skyblue")+labs(title = "Posterior Probability of occurrence for cell that fisherman is in over time",x = "Hours",y = "Posterior Probability") + theme_minimal()
+full_plot
+
 ```
 
 ### Question 2d
 
-We would simply generate the prior and not combine the prior distribution and search detection.This means we will search any cell at random and not the one with the highest probability of successful detection .The occurrence probability will not need to be updated as the detection does not depend on location anymore.The posterior will also just be equal to the previous prior as no additional information is gained from varying detection probabilities.
+If the $p_i$ is constant across cells then detection probability would no longer change based on location.In this case, we would only generate the prior distribution and not combine it with the search detection probability. This means we would search any cell at random, rather than searching cells with highest probability of successful detection.Since detection is no longer dependentant on the location, the occurrence probability would not need to be updated. The posterior would simply remain the same as the prior, as no new information is gained from varying detection probabilities.
