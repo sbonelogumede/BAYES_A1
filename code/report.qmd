@@ -17,17 +17,6 @@ format:
         \renewcommand{\baselinestretch}{0.65}
         \newcommand{\B}[1]{\mathbf{#1}}
 ---
-
-::: {#fig-dm}
-
-![](../images/cooking.jpg)
-
-Let me cook!
-
-:::
-
-\newpage
-
 # Question 1
 ## a)
 
@@ -192,8 +181,10 @@ where $a = 1$, $b = 1$ and $A_{2} = y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \
 # Packages required
 suppressPackageStartupMessages(require(cubature))
 suppressPackageStartupMessages(require(knitr))
+suppressPackageStartupMessages(require(ggplot2))
 suppressPackageStartupMessages(require(MASS))
 suppressPackageStartupMessages(require(MCMCpack))
+suppressMessages(require(patchwork))
 ```
 
 ```{r data, echo = FALSE}
@@ -316,8 +307,283 @@ The beta coefficients are approximately normally distributed.
 
 Confidence interval are the relative frequencies of stating valid bounds if you were to re-sample the data.
 Credibility intervals are the probability that the true parameter is within the stated bounds.
-
+The true beta parameter values should be in the closed interval of these credibility intervals indicated on the plot.
 \newpage
 
 # Question 2
 
+## a)
+
+Given:
+
+$Z_i|Y_i \sim{Ber}(Y_ip_i)=(Y_ip_i)^z(1-y_ip_i)^{1-z}$
+
+$Y_i \sim {Ber}(\theta_i)=(\theta_i)^y(1-\theta_i)^{1-y}$
+
+Derivation of equation 2:
+
+$P(Z_i=0)=\sum_{y=0}^{1}P(Z_i=0|Y_i=y)P(Y_i=y)$
+
+$=(p_i)^0(1-pi)^1(\theta_i)^1(1-\theta_i)^0+(0p_i)^0(1-0p_i)^1(\theta_i)^0(1-\theta_i)^1$
+
+$=(1-p_i)(\theta_i) +(1-\theta_i)$ $=1-p_i\theta_i$
+
+$P(Y_i=1)=(\theta_i)^1(1-\theta_i)^0$
+
+$=\theta_i$
+
+$P(Z_i=0|Y_i=1)=(p_i)^0(1-p_i)^1$
+
+Therefore :
+
+$P(Y_i=1|Z_i=0) =\frac{P(Z_i=0|Y_i=1)P(Y_i)} {P(Z_i=0)}$
+
+$=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
+
+Derivation of equation 4 :
+
+If the fisherman is in cell $j$ then searching cell $i$ gives no information about $j$ ,so we are guaranteed to not find the fisherman.
+
+Therefore:
+
+$P(Z_i=0|Y_j=1)=1$
+
+$P(Y_j=1)=(\theta_j)^1(1-\theta_j)^0$
+
+$=\theta_j$
+
+As proved above :
+
+$P(Z_i=0)=$ $1-p_i\theta_i$
+
+Therefore:
+
+$\theta_{j,new}=P(Y_j=1|Z_i=0) =\frac{P(Z_i=0|Y_j=1)P(Y_j)} {P(Z_i=0)}$
+
+$\theta{j,new}=\frac{\theta_{j,old}}{1-p_i\theta_{i,old}}$
+
+## b)
+
+Equation 2 is the posterior probability the fisherman is in the cell given that we fail to detect him.Although we don't detect the fisherman he may still be in the cell.So we reduce the probability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( probability of occurence$\theta_{i,old}$).Therefore Equation 3 shows how the occurrence probability is adjusted over time as we gain more evidence through the bayesian search.
+
+## c)
+
+### Approach:
+
+1.  **Initialize Prior and True Location using Jakes provided functions:**
+
+    -   Generate the initial prior probability distribution using `generate_lost()`.
+    -   Generate the true location of the fisherman using `generate_fisherman()`.
+    -   Store the fisherman's coordinates as `rowf` and `colf`.
+
+2.  **Variable initialization:**
+
+    -   Create a posterior tracker vector of size 48 to record the posterior probability of the fisherman’s true location at each time step.
+    -   Set posterior equal to the initial prior.
+    -   Initialise a boolean called fishermanfound to false initially and use this to track whether the fisherman is found or not.
+
+3.  **Create a for loop which loops through the amount of hours(48):**
+
+    -   Merge the "prior" and detection probability to create a search grid
+    -   Select the cell with the highest probability of successful detection
+    -   If the chosen cell is the fisherman’s true location, simulate detection using the detection probability associated with the cell of interest(use rbinom).
+    -   Otherwise, detection is automatically set to 0.
+    -   Record the current posterior probability of the true location in `post_tracker[i]`.
+
+4.  **Update Posterior if Fisherman Not Found:**
+
+    If the fisherman is not detected use Bayes theorem to update the probability theorem:
+
+    -   Update the probability in the searched cell using: $$
+        \theta_{i,\text{new}} = \frac{(1 - p_i)\theta_{i,\text{old}}}{1 - p_i\theta_{i,\text{old}}}
+        $$
+    -   Update all other cells: $$
+        \theta_{j,\text{new}} = \frac{\theta_{j,\text{old}}}{1 - p_i\theta_{i,\text{old}}} \quad \text{for } j \ne i
+        $$
+
+5.  **Successful Detection:**
+
+    -   If detection is successful, break the loop and set the boolean fisherman found to true.
+
+```{r ,include=FALSE}
+#### Required Functions provided by Jake####
+set.seed(123)
+
+#### Data Generating Functions ####
+
+generate_lost <- function(grid_size, nsims){
+  
+  # Function to generate the prior distribution for the 
+  # location of the lost fisherman
+  # Args: 
+  #       grid_size: the dimensions of the square search grid
+  #       nsims: number of samples to base the prior distribution on
+  
+  mu_vec  <- c(grid_size/2, grid_size/2)
+  sig_mat <- matrix(c(2, 1, 5, 5), 2,2)
+  
+  dat <- mvrnorm(nsims, mu_vec, sig_mat)
+  dat <- round(abs(dat))
+  head(dat)
+  summary(as.data.frame(dat))
+  prior <- matrix(rep(0,grid_size^2), grid_size, grid_size)
+  for (i in 1:NROW(dat)){
+    
+    if (dat[i,1] < grid_size & dat[i,2] < grid_size){
+      prior[dat[i,1], dat[i,2]] <- prior[dat[i,1], dat[i,2]] + 1
+    }
+    
+  }
+  prior <- prior/sum(prior)
+  return(prior)
+}
+
+generate_fisherman <- function(grid_size){
+  
+  # Function to generate the true location of the lost fisherman.
+  # This should not effect the search decision in any way!! It is unkown
+  # to the search crew.
+  # Args: 
+  #       grid_size: the dimensions of the square search grid
+
+  mu_vec  <- c(grid_size/2, grid_size/2)
+  sig_mat <- matrix(c(2, 1, 5, 5), 2,2)
+  
+  location  <- round(mvrnorm(1, mu_vec, sig_mat))
+  true_grid <- matrix(rep(0, grid_size^2), grid_size, grid_size)
+  true_grid[location[1], location[2]] <- 1
+  
+  return(true_grid)
+}
+
+#### Simulation ####
+
+search_size <- 20
+unifs <- runif(search_size^2, min = 0.6, max = 0.9)
+##Step 2 - gain detection distribution
+detect_pr <- matrix(unifs, ncol = search_size)
+
+```
+
+```{r ,include=FALSE}
+##step 1 - prior of experts
+prior <- generate_lost(search_size,10000)
+#get fishermans location 
+fish_grid <- generate_fisherman(search_size)
+cell <- which(fish_grid == 1,arr.ind=TRUE)
+rowf <- cell[1]
+colf <- cell[2]
+
+max_hours <- 48
+post_tracker <- numeric(max_hours)
+fishermanfound <- FALSE
+prior1 <- prior
+###at the start your prior is your posterior
+posterior <- prior
+
+```
+
+```{r,include=FALSE}
+for (i in 1:max_hours){
+  ##step 3 - merge 2 distributions  
+  ##posterior initially prior ,we use the previous posterior as the new prior
+  grid <- posterior*detect_pr
+  ##step 4 - search cell with highest probability
+  #cell_check <- which(grid == 1,arr.ind=TRUE)
+  ##finding the index with the highest probability
+  cell_check <- arrayInd(which.max(grid), dim(grid))
+  row <- cell_check[1]
+  col <- cell_check[2]
+ ##check if fisherman is in the cell
+  if(fish_grid[row,col]==1){
+    ##use detection pr check if we find fisherman given he is in the cell.
+    ##1 sample,1 trial using highest probability of cells
+    detected <- rbinom(1, 1, detect_pr[row, col])
+  }
+    else {
+      detected <- 0
+    }
+  post_tracker[i] <- posterior[rowf,colf]
+  
+  #step 5 - if not detected update using Bayes
+  if (detected == 1) {
+    #cat("Fisherman here", i, "in cell (", row, ",", col, ")\n")
+    fishermanfound <- TRUE
+    break
+  }
+  pi <- detect_pr[row,col]
+  posterior[row,col] <- ((1-pi)*posterior[row,col])/(1 - pi * posterior[row, col])
+  posterior[-row, -col] <- posterior[-row, -col] / (1 - pi * posterior[row, col])
+  ##normalising posterior values
+  posterior <- posterior/sum(posterior)
+}
+```
+
+```{r,echo=FALSE,message=FALSE, warning=FALSE, fig.fullwidth=TRUE}
+##creating dummy variable which allows us to indicate the true location of the fisherman on our plots
+fishermancell <- data.frame(x=colf,y=rowf)
+fishermancell$label <- "True location"
+df_prior <- expand.grid(x = 1:search_size, y = 1:search_size)
+df_prior$value <- as.vector(prior1)
+plot1 <- ggplot(df_prior, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "red", high = "blue") +
+  coord_fixed() +
+  geom_tile(data = fishermancell, aes(x = x, y = y,color=label),
+            fill = NA, size = 0.5, show.legend = TRUE)+scale_color_manual(name = "", values = c("True location" = "yellow")) +
+  labs(x='Column',y="Row",subtitle="First step", fill = "Probability") +
+  theme_minimal()+theme(
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+
+
+df_posterior <- expand.grid(x = 1:search_size, y = 1:search_size)
+df_posterior$value <- as.vector(posterior)
+plot2 <- ggplot(df_posterior, aes(x = x, y = y, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "red", high = "blue") +
+  coord_fixed() +
+  geom_tile(data = fishermancell, aes(x = x, y = y,color=label),
+            fill = NA, size = 0.5, show.legend = TRUE)+scale_color_manual(name = "", values = c("True location" = "yellow")) +
+  labs(x='Column',y="Row", subtitle="Final step",fill = "Probability") +
+  theme_minimal()+theme(
+    plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
+  )
+##combining two plots into one for easier comparison
+
+full_plot <- (plot1 + plot2) +
+  plot_layout(ncol = 2,guides = "collect") +  
+  plot_annotation(
+    title = "Posterior probabilities of occurrence during Bayesian search",
+    theme = theme(plot.title = element_text(
+        hjust = 0.5,
+        size = 12,
+        face = "bold",
+        margin = margin(b = 15)  ),
+      legend.position = "right",legend.box.margin = margin(l = 20), 
+      plot.margin = margin(t = 20, r = 10, b = 10, l = 10))
+  )
+
+full_plot
+
+```
+
+```{r,echo=FALSE}
+df_post_time <- data.frame(
+  Time = 1:48,
+  Posterior = post_tracker
+)
+ggplot(df_post_time, aes(x = Time, y = Posterior)) +
+  geom_line(color = "blue", size = 1) +
+  labs(
+    title ="Posterior Probability at the true location",
+    x = "Hours", 
+    y = "Posterior Probability"
+  ) +
+  theme_minimal()
+
+```
+
+## d)
+
+If $p_i$ is constant across cells, detection probability no longer varies by location. In this case, the search strategy would focus on cells with the highest prior probability, rather than the highest probability of successful detection. If detection fails we still update the posterior probability using Bayes Theorem and the occurrence probabilities would also still need to be updated.Therefore the only notable change would be which cell we search.
