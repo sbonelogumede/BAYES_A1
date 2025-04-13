@@ -33,23 +33,68 @@ $=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
 
 Derivation of equation 4 :
 
-We know the posterior probability for the case when the cell $i$ contains the fisherman but we fail detect him is :
-
-$\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
-
-We searched cell $i$ and the fisherman wasn't found so we update the probability distribution based on this new information.In other words we are required to update all probabilities so they sum to 1 as required by a valid probability distribution.
-
-The probability of being in cell $j(where j \neq i)$ is not directly affected by cell $i$'s search,so the numerator remains $\theta_{j,old}$.However, we still adjust the probabilities for all cells by a normalization factor of $1-p_i\theta_i$ as seen in the denominator of the posterior probability to ensure that the total sum of probabilities remains 1.\
+If the fisherman is in cell $j$ then searching cell $i$ gives no information about $j$ ,so we are guaranteed to not find the fisherman.
 
 Therefore:
+
+$P(Z_i=0|Y_j=1)=1$
+
+$P(Y_j=1)=(\theta_j)^1(1-\theta_j)^0$
+
+$=\theta_j$
+
+As proved above :
+
+$P(Z_i=0)=$ $1-p_i\theta_i$
+
+Therefore:
+
+$\theta_{j,new}=P(Y_j=1|Z_i=0) =\frac{P(Z_i=0|Y_j=1)P(Y_j)} {P(Z_i=0)}$
 
 $\theta{j,new}=\frac{\theta_{j,old}}{1-p_i\theta_{i,old}}$
 
 ### Question 2b
 
-Equation 2 is the posterior probability of not detecting the fisherman given that the fisherman is indeed in the cell.Although we don't detect the fisherman he may still be in the cell.So we reduce the probability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( probability of occurence$\theta_{i,old}$).Therefore Equation 3 shows how the occurrence probability is adjusted over time as we gain more evidence through the bayesian search.
+Equation 2 is the posterior probability the fisherman is in the cell given that we fail to detect him.Although we don't detect the fisherman he may still be in the cell.So we reduce the probability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( probability of occurence$\theta_{i,old}$).Therefore Equation 3 shows how the occurrence probability is adjusted over time as we gain more evidence through the bayesian search.
 
 ### Question 2c
+
+### Approach:
+
+1.  **Initialize Prior and True Location using Jakes provided functions:**
+
+    -   Generate the initial prior probability distribution using `generate_lost()`.
+    -   Generate the true location of the fisherman using `generate_fisherman()`.
+    -   Store the fisherman's coordinates as `rowf` and `colf`.
+
+2.  **Variable initialization:**
+
+    -   Create a posterior tracker vector of size 48 to record the posterior probability of the fisherman’s true location at each time step.
+    -   Set posterior equal to the initial prior.
+    -   Initialise a boolean called fishermanfound to false initially and use this to track whether the fisherman is found or not.
+
+3.  **Create a for loop which loops through the amount of hours(48):**
+
+    -   Merge the "prior" and detection probability to create a search grid
+    -   Select the cell with the highest probability of successful detection
+    -   If the chosen cell is the fisherman’s true location, simulate detection using the detection probability associated with the cell of interest(use rbinom).
+    -   Otherwise, detection is automatically set to 0.
+    -   Record the current posterior probability of the true location in `post_tracker[i]`.
+
+4.  **Update Posterior if Fisherman Not Found:**
+
+    If the fisherman is not detected use Bayes theorem to update the probability theorem:
+
+    -   Update the probability in the searched cell using: $$
+        \theta_{i,\text{new}} = \frac{(1 - p_i)\theta_{i,\text{old}}}{1 - p_i\theta_{i,\text{old}}}
+        $$
+    -   Update all other cells: $$
+        \theta_{j,\text{new}} = \frac{\theta_{j,\text{old}}}{1 - p_i\theta_{i,\text{old}}} \quad \text{for } j \ne i
+        $$
+
+5.  **Successful Detection:**
+
+    -   If detection is successful, break the loop and set the boolean fisherman found to true.
 
 ```{r ,include=FALSE}
 #### Required Functions provided by Jake####
@@ -136,7 +181,7 @@ for (i in 1:max_hours){
   ##step 3 - merge 2 distributions  
   ##posterior initially prior ,we use the previous posterior as the new prior
   grid <- posterior*detect_pr
-  ##step 4 - search cell with highest probabibility
+  ##step 4 - search cell with highest probability
   #cell_check <- which(grid == 1,arr.ind=TRUE)
   ##finding the index with the highest probability
   cell_check <- arrayInd(which.max(grid), dim(grid))
@@ -169,6 +214,7 @@ for (i in 1:max_hours){
 
 ```{r,echo=FALSE,message=FALSE, warning=FALSE, fig.fullwidth=TRUE}
 suppressMessages(library(patchwork))
+##creating dummy variable which allows us to indicate the true location of the fisherman on our plots
 fishermancell <- data.frame(x=colf,y=rowf)
 fishermancell$label <- "True location"
 df_prior <- expand.grid(x = 1:search_size, y = 1:search_size)
@@ -197,6 +243,7 @@ plot2 <- ggplot(df_posterior, aes(x = x, y = y, fill = value)) +
   theme_minimal()+theme(
     plot.margin = margin(t = 10, r = 10, b = 10, l = 10)
   )
+##combining two plots into one for easier comparison
 library(patchwork)
 
 full_plot <- (plot1 + plot2) +
@@ -216,6 +263,23 @@ full_plot
 
 ```
 
+```{r,echo=FALSE}
+df_post_time <- data.frame(
+  Time = 1:48,
+  Posterior = post_tracker
+)
+ggplot(df_post_time, aes(x = Time, y = Posterior)) +
+  geom_line(color = "blue", size = 1) +
+  labs(
+    title ="Posterior Probability at the true location",
+    x = "Hours", 
+    y = "Posterior Probability"
+  ) +
+  theme_minimal()
+
+```
+
 ### Question 2d
 
-If the $p_i$ is constant across cells then detection probability would no longer change based on location.In this case, we would only generate the prior distribution and not combine it with the search detection probability. This means we would search any cell at random, rather than searching cells with highest probability of successful detection.Since detection is no longer dependentant on the location, the occurrence probability would not need to be updated. The posterior would simply remain the same as the prior, as no new information is gained from varying detection probabilities.
+\
+If $p_i$​ is constant across cells, detection probability no longer varies by location. In this case, the search strategy would focus on cells with the highest prior probability, rather than the highest probability of successful detection. If detection fails we still update the posterior probability using Bayes Theorem and the occurrence probabilities would also still need to be updated.Therefore the only notable change would be which cell we search.
