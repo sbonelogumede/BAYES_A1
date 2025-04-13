@@ -1,12 +1,18 @@
 ---
 title: "Assignment 1"
-author: "JRGLAY001, GMDSBO006 and MGRKHE001"
+author:
+  - Abrahams Laylaa (JRGLAY001)
+  - Gumede Sbonelo (GMDSBO006)
+  - Mugeri Khethani (MGRKHE001)
 date: today
 format: 
   pdf:
     pdfengine: pdflatex
     include-in-header: 
       text: |
+        \makeatletter
+        \@fleqntrue
+        \makeatother
         \usepackage[a4paper, left=0.3in, right=0.3in, top=0.3in, bottom=0.3in]{geometry}
         \extrafloats{500}
         \usepackage{etex}
@@ -15,168 +21,174 @@ format:
         \extrarowheight=5pt
         \maxdimen=16383.99999pt
         \renewcommand{\baselinestretch}{0.65}
-        \newcommand{\B}[1]{\mathbf{#1}}
+        \newcommand{\F}[1]{\mathbf{#1}}
+        \newcommand{\B}[1]{\symbf{#1}}
+
+editor: 
+  markdown: 
+    wrap: 72
+editor_options: 
+  chunk_output_type: console
 ---
+
 # Question 1
+
 ## a)
 
-Model formulation
-$$y = X\beta + e$$
-where $$e \sim \mathcal{N}(0, \sigma^2 I_{n})$$
+Model formulation for $\F{y}$:
 
-$$\mathbb{E}[y] = \mathbb{E}[X\beta + e]
-	= \mathbb{E}[X\beta] + \mathbb{E}[e]
-	= X\beta + 0
-	= X\beta$$
-$$\mathrm{Var}[y] = \mathrm{Var}[X\beta + e]
-	= \mathrm{Var}[X\beta] + \mathrm{Var}[e] + 2cov(X\beta, e)
-	= 0 + \sigma^2I_{n} + 0
-	= \sigma^2I_{n}$$
+$\F{y} = \F{X}\B{\beta} + \F{e}$ where $\F{e} \sim \mathcal{N}(\F{0}, \sigma^2 \F{I}_{n})$
 
-Therefore $$y \sim \mathcal{N}(X\beta, \sigma^2I_{n})$$
+Moments for $\F{y}$:
+$$\mathbb{E}[\F{y}] = \mathbb{E}[\F{X}\B{\beta} + \F{e}]
+    = \mathbb{E}[\F{X}\B{\beta}] + \mathbb{E}[\F{e}]
+    = \F{X}\B{\beta} + \F{0}
+    = \F{X}\B{\beta}$$
+$$\mathrm{Var}[\F{y}] = \mathrm{Var}[\F{X}\B{\beta} + \F{e}]
+    = \mathrm{Var}[\F{X}\B{\beta}] + \mathrm{Var}[\F{e}] + 2cov(\F{X}\B{\beta}, \F{e})
+    = \F{0} + \sigma^2\F{I}_{n} + \F{0}
+    = \sigma^2\F{I}_{n}$$
 
-Density of Y
-$$f_{Y}(y) = (2\pi\sigma^2)^{-\frac{n}{2}} exp(-\frac{1}{2\sigma^2} (y - X\beta)^{T}(y - X\beta))$$
-$$f_{Y}(y) = (2\pi\sigma^2)^{-\frac{n}{2}} exp(-\frac{1}{2\sigma^2} (y^{T}y - 2\beta^{T}X^{T}y + \beta^{T} X^{T}X \beta))$$
+Distribution for $\F{y}$:
+$$\F{y} \sim \mathcal{N}(\F{X}\B{\beta}, \sigma^2\F{I}_{n})$$
 
-Likelihood
-$$L(\beta, y, X) \propto (\sigma^2)^{-\frac{n}{2}} exp(-\frac{1}{2\sigma^2} (y^{T}y - 2\beta^{T}X^{T}y + \beta^{T}X^{T}X\beta))$$
+Density for $\F{y}$:
+$$f_{Y}(\F{y}) = (2\pi\sigma^2)^{-\frac{n}{2}}
+exp(-\frac{1}{2\sigma^2} (\F{y} - \F{X}\B{\beta})^{T}(\F{y} - \F{X}\B{\beta}))$$
+$$f_{Y}(\F{y}) = (2\pi\sigma^2)^{-\frac{n}{2}}
+exp(-\frac{1}{2\sigma^2} (\F{y}^{T}\F{y} - 2\B{\beta}^{T}\F{X}^{T}\F{y} + \B{\beta}^{T} \F{X}^{T}\F{X} \B{\beta}))$$
 
-Since $M = M^{-1} = I_{k+1}$
+Likelihood for $\B{\beta}$:
+$$L(\B{\beta}, \F{y}, \F{X}) \propto (\sigma^2)^{-\frac{n}{2}} 
+exp(-\frac{1}{2\sigma^2} (\F{y}^{T}\F{y} - 2\B{\beta}^{T}\F{X}^{T}\F{y} + \B{\beta}^{T}\F{X}^{T}\F{X}\B{\beta}))$$
 
-Then the prior distribution is
-$$[\beta|\sigma^2] \sim \mathcal{N}_{k+1}(\tilde{\beta}, \sigma^2 M^{-1})$$
+Since $\F{M} = \F{M}^{-1} = \F{I}_{k+1}$
 
-Prior density
-$$\pi(\beta|\sigma^2)
-	= (2\pi)^{-\frac{k+1}{2}}
-	\det(\sigma^2M^{-1})^{-\frac{1}{2}}
-	exp(-\frac{1}{2\sigma^2}(\beta - \tilde{\beta})^{T} M (\beta - \tilde{\beta}))$$
-$$\pi(\beta|\sigma^2)
-	= (2\pi)^{-\frac{k+1}{2}}
-	\det(\sigma^2M^{-1})^{-\frac{1}{2}}
-	exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta -2\beta^{T}M\tilde{\beta} + \tilde{\beta^{T}}M\tilde{\beta}))$$
-$$\pi(\beta|\sigma^2)
-	\propto  exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta -2\beta^{T}M\tilde{\beta} + \tilde{\beta^{T}}M\tilde{\beta}))$$
+Prior distribution for $\B{\beta} | \sigma^2$:
+$$[\B{\beta} | \sigma^2] \sim \mathcal{N}_{k+1} (\tilde{\B{\beta}}, \sigma^2 \F{M}^{-1})$$
 
-Prior distribution
+Prior density for $\B{\beta} | \sigma^2$:
+$$\pi(\B{\beta} | \sigma^2)
+    = (2\pi)^{-\frac{k+1}{2}}
+    \det(\sigma^2 \F{M}^{-1})^{-\frac{1}{2}}
+    exp(-\frac{1}{2\sigma^2} (\B{\beta} - \tilde{\B{\beta}})^{T} \F{M} (\B{\beta} - \tilde{\B{\beta}}))$$
+$$\pi(\B{\beta} | \sigma^2)
+    = (2\pi)^{-\frac{k+1}{2}}
+    \det(\sigma^2 \F{M}^{-1})^{-\frac{1}{2}}
+    exp(-\frac{1}{2\sigma^2}(\B{\beta}^{T} \F{M} \B{\beta} -2 \B{\beta}^{T} \F{M} \tilde{\B{\beta}} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}}))$$
+$$\pi(\B{\beta}|\sigma^2)
+    \propto  exp(-\frac{1}{2\sigma^2} (\B{\beta}^{T} \F{M} \B{\beta} -2 \B{\beta}^{T} \F{M} \B{\tilde{\beta}} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}}))$$
+
+Prior distribution for $\sigma^2$:
 $$[\sigma^2] \sim \mathcal{IG}(a, b)$$
 
-Prior density
-
-$$\pi(\sigma^2)
-	= \frac{b^{a}}{\Gamma{(a)}} \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
-$$\pi(\sigma^2)
-	\propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
+Prior density for $\sigma^2$:
+$$\pi(\sigma^2) = \frac{b^{a}}{\Gamma{(a)}} \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
+$$\pi(\sigma^2) \propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
 
 \newpage
 
-\textbf{Assuming that $\sigma^2$ is known}
+Assuming that $\sigma^2$ is known:
 
-Prior
-$$\pi(\beta|\sigma^2)
-	\propto exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta -2\beta^{T}M\tilde{\beta}))$$
+Prior density for $\B{\beta}|\sigma^2$:
+$$\pi(\B{\beta} | \sigma^2) \propto exp(-\frac{1}{2\sigma^2}(\B{\beta}^{T} \F{M} \B{\beta} -2 \B{\beta}^{T} \F{M} \tilde{\B{\beta}}))$$
 
-Likelihood
-$$L(\beta|\sigma^2)
-	\propto exp(-\frac{1}{2\sigma^2} (-2\beta^{T}X^{T}y + \beta^{T}X^{T}X\beta))$$
+Likelihood for  $\B{\beta}|\sigma^2$:
+$$L(\B{\beta} | \sigma^2) \propto exp(-\frac{1}{2\sigma^2} (-2\B{\beta}^{T} \F{X}^{T}\B{y} + \B{\beta}^{T} \F{X}^{T} \F{X} \B{\beta}))$$
 
-Posterior
-$$\pi(\beta| y, X)
-\propto exp(-\frac{1}{2\sigma^2} (\beta^{T}(M + X^{T}X)\beta -2\beta^{T}(X^{T}y + M\tilde{\beta})))$$
+Posterior for  $\B{\beta}|\sigma^2$:
+$$\pi(\B{\beta}| \F{y}, \F{X}) 
+\propto exp(-\frac{1}{2\sigma^2} (\B{\beta}^{T}(\F{M} 
++ \F{X}^{T} \F{X}) \B{\beta}
+- 2 \B{\beta}^{T} (\F{X}^{T} \F{y} + \F{M} \tilde{\B{\beta}})))$$
+but $(\F{X}^{T} \F{X}) \hat{\B{\beta}} = \F{X}^{T} \F{y}$
+$$\pi(\B{\beta}| \F{y}, \F{X})
+\propto exp(-\frac{1}{2\sigma^2} (\B{\beta}^{T} (\F{M} + \B{X}^{T} \F{X}) \B{\beta} 
+- 2 \B{\beta}^{T} ((\F{X}^{T} \F{X}) \hat{\B{\beta}} + \F{M} \tilde{\B{\beta}})))$$
 
-Recall that $(X^{T}X) \hat{\beta} = X^{T}y$
-$$\pi(\beta| y, X)
-	\propto exp(-\frac{1}{2\sigma^2} (\beta^{T}(M + X^{T}X)\beta -2\beta^{T}((X^{T}X) \hat{\beta} + M\tilde{\beta})))$$
+Let $\F{A} = \F{M} + \F{X}^{T} \F{X}$ and $\F{b} = (\F{X}^{T} \F{X}) \hat{\B{\beta}} + \F{M} \tilde{\B{\beta}}$
 
-Let $A = M + X^{T}X$ and $b = (X^{T}X) \hat{\beta} + M\tilde{\beta}$
+Completing the square:
+$\B{\beta}^{T} \F{A} \B{\beta} - 2 \B{\beta}^{T} \F{b} = (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}) - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}$, where $\mu_{\B{\beta}} = \F{A}^{-1} \F{b}$
+$$\pi(\B{\beta}| \F{y}, \F{X})
+\propto exp(-\frac{1}{2\sigma^2} 
+((\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}) - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}))$$
+but $\mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}$ is independent of $\B{\beta}$
+$$\pi(\B{\beta}| \F{y}, \F{X}) \propto exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}))$$
+$$\pi(\B{\beta}| \F{y}, \F{X}) \propto exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T}( \F{M} + \F{X}^{T} \F{X})( \B{\beta} - \mu_{\B{\beta}}))$$
+Therefore:
 
-Completing the square using the following identity
-$$\beta^{T}A\beta - 2\beta^{T}b
-	= (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}$$ 
-where $\mu_{\beta} = A^{-1}b$
-
-$$\pi(\beta| y, X)
-	\propto exp(-\frac{1}{2\sigma^2} 
-	((\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}))$$
-
-but $\mu_{\beta}^{T}A\mu_{\beta}$ is independent of $\beta$
-$$\pi(\beta| y, X) \propto exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))$$
-$$\pi(\beta| y, X) \propto exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}(M + X^{T}X)(\beta - \mu_{\beta}))$$
-
-meaning $$[\beta| \sigma^2, y, X] \sim \mathcal{N}_{k+1}(\mu_{\beta}, \sigma^2(M + X^{T}X)^{-1})$$
-where $$\mu_{\beta} = (M + X^{T}X)^{-1} ((X^{T}X) \hat{\beta} + M\tilde{\beta})$$
+$[\B{\beta}| \sigma^2, \B{y}, \B{X}] \sim \mathcal{N}_{k+1}(\mu_{\B{\beta}}, \sigma^2(\F{M} + \F{X}^{T} \F{X})^{-1})$, where $\mu_{\B{\beta}} = (\F{M} + \F{X}^{T} \F{X})^{-1} ((\F{X}^{T} \F{X}) \hat{\B{\beta}} + \F{M} \tilde{\B{\beta}})$
 
 \newpage
 
-Joint distribution
-$$J = [\beta, \sigma^2| y, X]$$
+Consider $L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]$:
+$$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]
+\propto (\sigma^2)^{-\frac{n}{2}} 
+exp(-\frac{1}{2\sigma^2}(\F{y}^{T} \F{y} - 2 \B{\beta}^{T} \F{X}^{T} \F{y} + \B{\beta}^{T} \F{X}^{T} \F{X} \B{\beta})) 
+(\sigma^2)^{-\frac{k+1}{2}}
+exp(-\frac{1}{2\sigma^2}(\B{\beta}^{T} \F{M} \B{\beta} - 2 \B{\beta}^{T} \F{M} \tilde{\B{\beta}} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}}))$$
+$$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]
+\propto (\sigma^2)^{-\frac{n+k+1}{2}} 
+exp(-\frac{1}{2\sigma^2} (\F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}}))
+exp(-\frac{1}{2\sigma^2} (\B{\beta}^{T}( \F{M} + \F{X}^{T} \F{X}) \B{\beta} - 2 \B{\beta}^{T} ((\F{X}^{T} \F{X}) \hat{\B{\beta}} + \F{M} \tilde{\B{\beta}}))$$
 
-Consider
-$$P = L(\beta, y, X)[\beta| \sigma^2]$$
-$$P \propto (\sigma^2)^{-\frac{n}{2}} 
-	exp(-\frac{1}{2\sigma^2}(y^{T}y -2\beta^{T}X^{T}y + \beta^{T}X^{T}X\beta)) 
-	(\sigma^2)^{-\frac{k+1}{2}}
-	exp(-\frac{1}{2\sigma^2}(\beta^{T}M\beta - 2\beta^{T}M\tilde{\beta} + \tilde{\beta^{T}}M\tilde{\beta}))$$
-$$P \propto (\sigma^2)^{-\frac{n+k+1}{2}} 
-	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta}))
-	exp(-\frac{1}{2\sigma^2} (\beta^{T}(M + X^{T}X)\beta -2\beta^{T}((X^{T}X) \hat{\beta} + M\tilde{\beta}))$$
-Let $A = M + X^{T}X$ and $b = (X^{T}X) \hat{\beta} + M\tilde{\beta}$
+Let $\F{A} = \F{M} + \F{X}^{T} \F{X}$ and $\F{b} = (\F{X}^{T} \F{X}) \hat{\B{\beta}} + \F{M} \tilde{\B{\beta}}$
 
-Completing the square using the following identity
-$$\beta^{T}A\beta - 2\beta^{T}b
-	= (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}$$ 
-where $\mu_{\beta} = A^{-1}b$
-$$P \propto (\sigma^2)^{-\frac{n+k+1}{2}} 
-	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta}))
-	exp(-\frac{1}{2\sigma^2} ((\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) - \mu_{\beta}^{T}A\mu_{\beta}))$$
-$$P \propto (\sigma^2)^{-\frac{n+k+1}{2}} 
-	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}A\mu_{\beta}))
-	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))$$
-
-$$[\sigma^2]
-	\propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
-
-$$J \propto L(\beta, y, X)[\beta| \sigma^2][\sigma^2]$$
-$$J \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
-	exp(-\frac{1}{2\sigma^2} (y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}A\mu_{\beta}))
-	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))
-	exp(-\frac{b}{\sigma^2})$$
-Let $A_{2} = y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}A\mu_{\beta}$
-$$J \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
-	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
-	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}))$$
-
-$$[\sigma^2| y, X] = \int_{\beta} [\beta, \sigma^2| y, X]\, d\beta$$
-$$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
-	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
-	\int_{\beta}exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) \, d\beta$$
-Recall
-$$\int_{\beta}
-	(2\pi)^{-\frac{k+1}{2}}det((\frac{1}{\sigma^2}(M + X^{T}X))^{-1})^{-\frac{1}{2}}
-	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta})) \, d\beta
-	= 1$$
-then
-$$I = \int_{\beta}
-	exp(-\frac{1}{2\sigma^2} (\beta - \mu_{\beta})^{T}A(\beta - \mu_{\beta}) \, d\beta 
-	= (2\pi)^{\frac{k+1}{2}}det((\frac{1}{\sigma^2}(M + X^{T}X))^{-1})^{\frac{1}{2}})$$
-
-We know that $det(aA) = a^{k}det(A)$, where $A$ is a $k$ by $k$ matrix.
-
+Completing the square:
+$\B{\beta}^{T} \F{A} \B{\beta} - 2 \B{\beta}^{T} \F{b} = (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}) - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}$, where $\mu_{\B{\beta}} = \F{A}^{-1} \F{b}$
+$$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]
+\propto (\sigma^2)^{-\frac{n+k+1}{2}} 
+exp(-\frac{1}{2\sigma^2} (\F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}}))
+exp(-\frac{1}{2\sigma^2} ((\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}) - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}))$$
+$$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]
+\propto (\sigma^2)^{-\frac{n+k+1}{2}} 
+exp(-\frac{1}{2\sigma^2} (\F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}} - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}))
+exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}))$$
+Prior density for $\sigma^2$:
+$$[\sigma^2] \propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
+$$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2][\sigma^2]
+\propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+exp(-\frac{1}{2\sigma^2} (\F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}} - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}))
+exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}))
+exp(-\frac{b}{\sigma^2})$$
+Let $A_{2} = \F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}} - \mu_{\B{\beta}}^{T} \F{A} \mu_{\B{\beta}}$
+$$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2][\sigma^2] 
+\propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
+exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \B{A} (\B{\beta} - \mu_{\B{\beta}}))$$
+$$[\sigma^2| \F{y}, \F{X}] = \int_{\B{\beta}} [\B{\beta}, \sigma^2| \F{y}, \F{X}]\, d\B{\beta}$$
+$$[\sigma^2| \F{y}, \F{X}] \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
+\int_{\B{\beta}}exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}) \, d\B{\beta}$$
+$$\int_{\B{\beta}}
+(2\pi)^{-\frac{k+1}{2}}det((\frac{1}{\sigma^2}(\F{M} + \F{X}^{T} \F{X}))^{-1})^{-\frac{1}{2}}
+exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}})) \, d\B{\beta}
+= 1$$
+$$I = \int_{\B{\beta}}
+exp(-\frac{1}{2\sigma^2} (\B{\beta} - \mu_{\B{\beta}})^{T} \F{A} (\B{\beta} - \mu_{\B{\beta}}) \, d\B{\beta} 
+= (2\pi)^{\frac{k+1}{2}}det((\frac{1}{\sigma^2}(\F{M} + \F{X}^{T} \F{X}))^{-1})^{\frac{1}{2}})$$
+We know that $det(a \F{A}) = a^{k}det(\F{A})$, where $\F{A}$ is a $k$ by $k$ matrix.
 $$I = (2\pi)^{\frac{k+1}{2}}
 (\sigma^2)^{\frac{k+1}{2}}
-det((M + X^{T}X)^{-1})^{\frac{1}{2}}$$
+det((\F{M} + \F{X}^{T} \F{X})^{-1})^{\frac{1}{2}}$$
 $$I \propto (\sigma^2)^\frac{k+1}{2}$$
-$$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
-	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
-	(\sigma^2)^{\frac{k+1}{2}}$$
-$$[\sigma^2| y, X] \propto (\sigma^2)^{-(\frac{n}{2} + a) - 1} 
-	exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))$$
-meaning
-$$[\sigma^2| y, X] \sim \mathcal{IG}(a + \frac{n}{2}, b + \frac{A_{2}}{2})$$
-where $a = 1$, $b = 1$ and $A_{2} = y^{T}y + \tilde{\beta^{T}}M\tilde{\beta} - \mu_{\beta}^{T}(M + X^{T}X)\mu_{\beta}$
+$$[\sigma^2| \F{y}, \F{X}]
+\propto (\sigma^2)^{-(\frac{n+k+1}{2} + a + 1)} 
+exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))
+(\sigma^2)^{\frac{k+1}{2}}$$
+$$[\sigma^2| \F{y}, \F{X}] 
+\propto (\sigma^2)^{-(\frac{n}{2} + a) - 1} 
+exp(-\frac{1}{\sigma^2} (b + \frac{A_{2}}{2}))$$ 
+Therefore:
+
+$[\sigma^2| \F{y}, \F{X}] \sim \mathcal{IG}(a + \frac{n}{2}, b + \frac{A_{2}}{2})$, where $a = 1$, $b = 1$ and
+$A_{2} = \F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}} - \mu_{\B{\beta}}^{T} (\F{M} + \F{X}^{T} \F{X}) \mu_{\B{\beta}}$
+
+\newpage
 
 ## b)
+
 ```{r setup, echo = FALSE, warning = FALSE}
 # Packages required
 suppressPackageStartupMessages(require(cubature))
@@ -263,7 +275,9 @@ kable(head(Beta.samples),
 \newpage
 
 ## c)
+
 ### i)
+
 ```{r trace, echo = FALSE, fig.width=8, fig.height=10}
 # Trace plots
 par(mfrow = c(3, 2))
@@ -274,11 +288,14 @@ for(i in 1:6){
 }
 ```
 
-All of the trace plots appear as random scatter, indicating stationarity. This provides evidence for the convergence of the Markov Chains.
+All of the trace plots appear as random scatter, indicating
+stationarity. This provides evidence for the convergence of the Markov
+Chains.
 
 \newpage
 
 ### ii)
+
 ```{r density, echo = FALSE, fig.width=8, fig.height=10}
 # Density plots
 par(mfrow = c(3, 2))
@@ -303,12 +320,14 @@ for(i in 1:6){
 			 lwd = 2)
 }
 ```
+
 The beta coefficients are approximately normally distributed.
 
-Confidence interval are the relative frequencies of stating valid bounds if you were to re-sample the data.
-Credibility intervals are the probability that the true parameter is within the stated bounds.
-The true beta parameter values should be in the closed interval of these credibility intervals indicated on the plot.
-\newpage
+Confidence interval are the relative frequencies of stating valid bounds
+if you were to re-sample the data. Credibility intervals are the
+probability that the true parameter is within the stated bounds. The
+true beta parameter values should be in the closed interval of these
+credibility intervals indicated on the plot. \newpage
 
 # Question 2
 
@@ -342,7 +361,8 @@ $=\frac{(1-p_i)\theta_i}{1-p_i\theta_i}$
 
 Derivation of equation 4 :
 
-If the fisherman is in cell $j$ then searching cell $i$ gives no information about $j$ ,so we are guaranteed to not find the fisherman.
+If the fisherman is in cell $j$ then searching cell $i$ gives no
+information about $j$ ,so we are guaranteed to not find the fisherman.
 
 Therefore:
 
@@ -364,35 +384,55 @@ $\theta{j,new}=\frac{\theta_{j,old}}{1-p_i\theta_{i,old}}$
 
 ## b)
 
-Equation 2 is the posterior probability the fisherman is in the cell given that we fail to detect him.Although we don't detect the fisherman he may still be in the cell.So we reduce the probability of occurring in the cell rather than ruling it out.To show this decrease in probability over time we update the new prior (probability of occurrence $\theta_{i,new}$) using the old prior( probability of occurence$\theta_{i,old}$).Therefore Equation 3 shows how the occurrence probability is adjusted over time as we gain more evidence through the bayesian search.
+Equation 2 is the posterior probability the fisherman is in the cell
+given that we fail to detect him.Although we don't detect the fisherman
+he may still be in the cell.So we reduce the probability of occurring in
+the cell rather than ruling it out.To show this decrease in probability
+over time we update the new prior (probability of occurrence
+$\theta_{i,new}$) using the old prior( probability of
+occurence$\theta_{i,old}$).Therefore Equation 3 shows how the occurrence
+probability is adjusted over time as we gain more evidence through the
+bayesian search.
 
 ## c)
 
 ### Approach:
 
-1.  **Initialize Prior and True Location using Jakes provided functions:**
+1.  **Initialize Prior and True Location using Jakes provided
+    functions:**
 
-    -   Generate the initial prior probability distribution using `generate_lost()`.
-    -   Generate the true location of the fisherman using `generate_fisherman()`.
+    -   Generate the initial prior probability distribution using
+        `generate_lost()`.
+    -   Generate the true location of the fisherman using
+        `generate_fisherman()`.
     -   Store the fisherman's coordinates as `rowf` and `colf`.
 
 2.  **Variable initialization:**
 
-    -   Create a posterior tracker vector of size 48 to record the posterior probability of the fisherman’s true location at each time step.
+    -   Create a posterior tracker vector of size 48 to record the
+        posterior probability of the fisherman’s true location at each
+        time step.
     -   Set posterior equal to the initial prior.
-    -   Initialise a boolean called fishermanfound to false initially and use this to track whether the fisherman is found or not.
+    -   Initialise a boolean called fishermanfound to false initially
+        and use this to track whether the fisherman is found or not.
 
 3.  **Create a for loop which loops through the amount of hours(48):**
 
-    -   Merge the "prior" and detection probability to create a search grid
-    -   Select the cell with the highest probability of successful detection
-    -   If the chosen cell is the fisherman’s true location, simulate detection using the detection probability associated with the cell of interest(use rbinom).
+    -   Merge the "prior" and detection probability to create a search
+        grid
+    -   Select the cell with the highest probability of successful
+        detection
+    -   If the chosen cell is the fisherman’s true location, simulate
+        detection using the detection probability associated with the
+        cell of interest(use rbinom).
     -   Otherwise, detection is automatically set to 0.
-    -   Record the current posterior probability of the true location in `post_tracker[i]`.
+    -   Record the current posterior probability of the true location in
+        `post_tracker[i]`.
 
 4.  **Update Posterior if Fisherman Not Found:**
 
-    If the fisherman is not detected use Bayes theorem to update the probability theorem:
+    If the fisherman is not detected use Bayes theorem to update the
+    probability theorem:
 
     -   Update the probability in the searched cell using: $$
         \theta_{i,\text{new}} = \frac{(1 - p_i)\theta_{i,\text{old}}}{1 - p_i\theta_{i,\text{old}}}
@@ -403,9 +443,10 @@ Equation 2 is the posterior probability the fisherman is in the cell given that 
 
 5.  **Successful Detection:**
 
-    -   If detection is successful, break the loop and set the boolean fisherman found to true.
+    -   If detection is successful, break the loop and set the boolean
+        fisherman found to true.
 
-```{r ,include=FALSE}
+```{r template, include=FALSE}
 #### Required Functions provided by Jake####
 set.seed(123)
 
@@ -465,7 +506,7 @@ detect_pr <- matrix(unifs, ncol = search_size)
 
 ```
 
-```{r ,include=FALSE}
+```{r prior,include=FALSE}
 ##step 1 - prior of experts
 prior <- generate_lost(search_size,10000)
 #get fishermans location 
@@ -483,7 +524,7 @@ posterior <- prior
 
 ```
 
-```{r,include=FALSE}
+```{r posterior, include=FALSE}
 for (i in 1:max_hours){
   ##step 3 - merge 2 distributions  
   ##posterior initially prior ,we use the previous posterior as the new prior
@@ -519,7 +560,7 @@ for (i in 1:max_hours){
 }
 ```
 
-```{r,echo=FALSE,message=FALSE, warning=FALSE, fig.fullwidth=TRUE}
+```{r heatmap,echo=FALSE,message=FALSE, warning=FALSE, fig.fullwidth=TRUE}
 ##creating dummy variable which allows us to indicate the true location of the fisherman on our plots
 fishermancell <- data.frame(x=colf,y=rowf)
 fishermancell$label <- "True location"
@@ -568,7 +609,7 @@ full_plot
 
 ```
 
-```{r,echo=FALSE}
+```{r search, echo=FALSE}
 df_post_time <- data.frame(
   Time = 1:48,
   Posterior = post_tracker
@@ -586,4 +627,80 @@ ggplot(df_post_time, aes(x = Time, y = Posterior)) +
 
 ## d)
 
-If $p_i$ is constant across cells, detection probability no longer varies by location. In this case, the search strategy would focus on cells with the highest prior probability, rather than the highest probability of successful detection. If detection fails we still update the posterior probability using Bayes Theorem and the occurrence probabilities would also still need to be updated.Therefore the only notable change would be which cell we search.
+If $p_i$ is constant across cells, detection probability no longer
+varies by location. In this case, the search strategy would focus on
+cells with the highest prior probability, rather than the highest
+probability of successful detection. If detection fails we still update
+the posterior probability using Bayes Theorem and the occurrence
+probabilities would also still need to be updated.Therefore the only
+notable change would be which cell we search.
+
+\newpage
+
+# Question 3
+
+\newpage
+
+# Plagiarism Declaration
+## Abrahams Laylaa (JRGLAY001) declaration
+
+\begin{enumerate}
+
+\item [1.] I know that plagiarism is a serious form of academic misconduct.
+\item [2.] I have read the document about avoiding plagiarism, am familiar with its contents and have avoided all forms of plagiarism mentioned there.
+\item [3.] Where I have used the words of others, I have indicated this by the use of quotation marks.
+\item [4.] I have referenced all quotations and properly acknowledged ideasborrowed from others.
+\item [5.] I have not and shall not allow others to plagiarise my work.
+\item [6.] I declare that this is my own work.
+\item [7.] I am attaching the summary of the Turnitin match overview (when required to do so).
+
+\end{enumerate}
+
+```{=latex}
+\begin{flushleft}
+\includegraphics[width=0.15\textwidth]{../images/Signature_SboneloGumede.jpg}\\
+Signature: Abrahams Laylaa (JRGLAY001)
+\end{flushleft}
+```
+
+## Gumede Sbonelo (GMDSBO006) declaration
+
+\begin{enumerate}
+
+\item [1.] I know that plagiarism is a serious form of academic misconduct.
+\item [2.] I have read the document about avoiding plagiarism, am familiar with its contents and have avoided all forms of plagiarism mentioned there.
+\item [3.] Where I have used the words of others, I have indicated this by the use of quotation marks.
+\item [4.] I have referenced all quotations and properly acknowledged ideasborrowed from others.
+\item [5.] I have not and shall not allow others to plagiarise my work.
+\item [6.] I declare that this is my own work.
+\item [7.] I am attaching the summary of the Turnitin match overview (when required to do so).
+
+\end{enumerate}
+
+```{=latex}
+\begin{flushleft}
+\includegraphics[width=0.15\textwidth]{../images/Signature_SboneloGumede.jpg}\\
+Signature: Gumede Sbonelo (GMDSBO006)
+\end{flushleft}
+```
+
+## Mugeri Khethani (MGRKHE001) declaration
+
+\begin{enumerate}
+
+\item [1.] I know that plagiarism is a serious form of academic misconduct.
+\item [2.] I have read the document about avoiding plagiarism, am familiar with its contents and have avoided all forms of plagiarism mentioned there.
+\item [3.] Where I have used the words of others, I have indicated this by the use of quotation marks.
+\item [4.] I have referenced all quotations and properly acknowledged ideasborrowed from others.
+\item [5.] I have not and shall not allow others to plagiarise my work.
+\item [6.] I declare that this is my own work.
+\item [7.] I am attaching the summary of the Turnitin match overview (when required to do so).
+
+\end{enumerate}
+
+```{=latex}
+\begin{flushleft}
+\includegraphics[width=0.15\textwidth]{../images/Signature_SboneloGumede.jpg}\\
+Signature: Mugeri Khethani (MGRKHE001)
+\end{flushleft}
+```
