@@ -86,8 +86,7 @@ Prior density for $\sigma^2$:
 $$\pi(\sigma^2) = \frac{b^{a}}{\Gamma{(a)}} \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
 $$\pi(\sigma^2) \propto \sigma^{2(-a-1)} exp(-\frac{b}{\sigma^2})$$
 
-\newpage
-
+### i.
 Assuming that $\sigma^2$ is known:
 
 Prior density for $\B{\beta}|\sigma^2$:
@@ -120,7 +119,7 @@ Therefore:
 
 $[\B{\beta}| \sigma^2, \B{y}, \B{X}] \sim \mathcal{N}_{k+1}(\mu_{\B{\beta}}, \sigma^2(\F{M} + \F{X}^{T} \F{X})^{-1})$, where $\mu_{\B{\beta}} = (\F{M} + \F{X}^{T} \F{X})^{-1} ((\F{X}^{T} \F{X}) \hat{\B{\beta}} + \F{M} \tilde{\B{\beta}})$
 
-\newpage
+### ii.
 
 Consider $L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]$:
 $$L(\B{\beta}, \F{y}, \F{X})[\B{\beta} | \sigma^2]
@@ -184,8 +183,6 @@ Therefore:
 
 $[\sigma^2| \F{y}, \F{X}] \sim \mathcal{IG}(a + \frac{n}{2}, b + \frac{A_{2}}{2})$, where $a = 1$, $b = 1$ and
 $A_{2} = \F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}} - \mu_{\B{\beta}}^{T} (\F{M} + \F{X}^{T} \F{X}) \mu_{\B{\beta}}$
-
-\newpage
 
 ## (b)
 
@@ -272,8 +269,6 @@ kable(head(Beta.samples),
 		col.names = col_labels)
 ```
 
-\newpage
-
 ## (c)
 
 ### (i)
@@ -291,8 +286,6 @@ for(i in 1:6){
 All of the trace plots appear as random scatter, indicating
 stationarity. This provides evidence for the convergence of the Markov
 Chains. Thus, the sampling quality appears to be good.
-
-\newpage
 
 ### (ii)
 
@@ -330,7 +323,6 @@ Confidence intervals represent the relative frequency with which the interval wo
 #### iii.
 The credible intervals for $\beta_1$ and $\beta_3$ include zero, indicating little evidence that these coefficients differ significantly from zero. Therefore, there is weak evidence for retaining these variables in the model. In contrast, the credible intervals for $\beta_0$, $\beta_2$, $\beta_4$, and $\beta_5$ do not include zero, providing strong evidence that these variables have a meaningful effect and should be retained in the model.
 
-\newpage
 
 # Question 2
 
@@ -638,8 +630,6 @@ the posterior probability using Bayes Theorem and the occurrence
 probabilities would also still need to be updated.Therefore the only
 notable change would be which cell we search.
 
-\newpage
-
 # Question 3
 
 ### A Twist on Linear Regressions
@@ -892,8 +882,6 @@ kable(head(tau2_samples),
 		col.names = c('$\\tau_2$'))
 ```
 
-\newpage
-
 # Plagiarism Declaration
 ## Jorge Abrahams Laylaa (JRGLAY001) declaration
 
@@ -953,7 +941,7 @@ Signature: Gumede Sbonelo (GMDSBO006)
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{Signature_Khethani.jpg}\\
+\includegraphics[width=0.12\textwidth]{Signature_Khethani.jpg}\\
 Signature: Mugeri Khethani (MGRKHE001)
 \end{flushleft}
 ```
