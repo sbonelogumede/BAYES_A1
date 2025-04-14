@@ -1,7 +1,7 @@
 ---
 title: "Assignment 1"
 author:
-  - Abrahams Laylaa (JRGLAY001)
+  - Jorge Abrahams Laylaa (JRGLAY001)
   - Gumede Sbonelo (GMDSBO006)
   - Mugeri Khethani (MGRKHE001)
 date: today
@@ -645,7 +645,7 @@ notable change would be which cell we search.
 \newpage
 
 # Plagiarism Declaration
-## Abrahams Laylaa (JRGLAY001) declaration
+## Jorge Abrahams Laylaa (JRGLAY001) declaration
 
 \begin{enumerate}
 
@@ -661,8 +661,8 @@ notable change would be which cell we search.
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{../images/Signature_SboneloGumede.jpg}\\
-Signature: Abrahams Laylaa (JRGLAY001)
+\includegraphics[width=0.15\textwidth]{../images/Signature_Laylaa.jpg}\\
+Signature: Jorge Abrahams Laylaa (JRGLAY001)
 \end{flushleft}
 ```
 
@@ -682,7 +682,7 @@ Signature: Abrahams Laylaa (JRGLAY001)
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{../images/Signature_SboneloGumede.jpg}\\
+\includegraphics[width=0.15\textwidth]{../images/Signature_Sbonelo.jpg}\\
 Signature: Gumede Sbonelo (GMDSBO006)
 \end{flushleft}
 ```
@@ -703,7 +703,7 @@ Signature: Gumede Sbonelo (GMDSBO006)
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{../images/Signature_SboneloGumede.jpg}\\
+\includegraphics[width=0.15\textwidth]{../images/Signature_Sbonelo.jpg}\\
 Signature: Mugeri Khethani (MGRKHE001)
 \end{flushleft}
 ```
