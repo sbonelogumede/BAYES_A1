@@ -33,7 +33,7 @@ editor_options:
 
 # Question 1
 
-## a)
+## (a)
 
 Model formulation for $\F{y}$:
 
@@ -187,7 +187,7 @@ $A_{2} = \F{y}^{T} \F{y} + \tilde{\B{\beta}}^{T} \F{M} \tilde{\B{\beta}} - \mu_{
 
 \newpage
 
-## b)
+## (b)
 
 ```{r setup, echo = FALSE, warning = FALSE}
 # Packages required
@@ -274,9 +274,9 @@ kable(head(Beta.samples),
 
 \newpage
 
-## c)
+## (c)
 
-### i)
+### (i)
 
 ```{r trace, echo = FALSE, fig.width=8, fig.height=10}
 # Trace plots
@@ -290,11 +290,11 @@ for(i in 1:6){
 
 All of the trace plots appear as random scatter, indicating
 stationarity. This provides evidence for the convergence of the Markov
-Chains.
+Chains. Thus, the sampling quality appears to be good.
 
 \newpage
 
-### ii)
+### (ii)
 
 ```{r density, echo = FALSE, fig.width=8, fig.height=10}
 # Density plots
@@ -321,13 +321,16 @@ for(i in 1:6){
 }
 ```
 
-The beta coefficients are approximately normally distributed.
+#### i.
+The posterior distributions of the beta coefficients appear to be approximately normal. However, there seems to be a substantial deviation between the sample mean of the posterior and the true beta coefficient for $\beta_1$, $\beta_2$, and $\beta_4$. This suggests potential bias or high uncertainty in the estimation of these coefficients.
 
-Confidence interval are the relative frequencies of stating valid bounds
-if you were to re-sample the data. Credibility intervals are the
-probability that the true parameter is within the stated bounds. The
-true beta parameter values should be in the closed interval of these
-credibility intervals indicated on the plot. \newpage
+#### ii.
+Confidence intervals represent the relative frequency with which the interval would contain the true parameter if the data were repeatedly resampled. Credible intervals, on the other hand, represent the probability that the true parameter lies within the stated bounds, given the observed data. The true beta parameter values are expected to lie within the credible intervals shown on the plot.
+
+#### iii.
+The credible intervals for $\beta_1$ and $\beta_3$ include zero, indicating little evidence that these coefficients differ significantly from zero. Therefore, there is weak evidence for retaining these variables in the model. In contrast, the credible intervals for $\beta_0$, $\beta_2$, $\beta_4$, and $\beta_5$ do not include zero, providing strong evidence that these variables have a meaningful effect and should be retained in the model.
+
+\newpage
 
 # Question 2
 
