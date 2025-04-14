@@ -17,20 +17,20 @@ format:
         \extrafloats{500}
         \usepackage{etex}
         \usepackage{tabularx}
+        \usepackage{hyperref}
         \maxdeadcycles=1000
         \extrarowheight=5pt
         \maxdimen=16383.99999pt
         \renewcommand{\baselinestretch}{0.65}
         \newcommand{\F}[1]{\mathbf{#1}}
         \newcommand{\B}[1]{\symbf{#1}}
-
+        \newcommand{\bm}[1]{\symbf{#1}}
 editor: 
   markdown: 
     wrap: 72
 editor_options: 
   chunk_output_type: console
 ---
-
 # Question 1
 
 ## (a)
@@ -228,7 +228,7 @@ palette <- c('lightskyblue', 'lightseagreen', 'palegreen', 'plum3', 'lightsalmon
 Sigma2.samples <- rinvgamma(n=50000, shape=(a + n/2), scale=(b + A2/2))
 
 kable(head(Sigma2.samples), 
-		digits = 7,
+		digits = 3,
 		caption = 'First six rows of $\\sigma^2$ sample values', 
 		col.names = c('$\\sigma^2$'))
 ```
@@ -642,6 +642,256 @@ notable change would be which cell we search.
 
 # Question 3
 
+### A Twist on Linear Regressions
+
+Consider the linear regression model where the data is generated as:
+
+$$
+Y_i =
+\begin{cases}
+x_i^\top \beta + e_i, & e_i \sim \mathcal{N}(0, \sigma_1^2), \quad i \in I_1 \\
+x_i^\top \beta + e_i, & e_i \sim \mathcal{N}(0, \sigma_2^2), \quad i \in I_2
+\end{cases}
+$$
+
+where: (I) is an index set. $(\sigma_1^2 < \sigma_2^2)$
+
+This implies that observations of the second index set have a higher variance than those of the first, potentially representing outliers in the dataset.
+
+As usual, let $\tau_i = \frac{1}{\sigma_i^2}$. If we assume that (I_1) is known, then without loss of generality (w.l.o.g), we can let:
+
+$$
+I_1 = \{1, \ldots, n_1\}, \quad I_2 = \{n_1 + 1, \ldots, n\}
+$$
+
+The likelihood for the data is as follows:
+
+$$
+L(\mathbf{Y} \mid \boldsymbol{\beta}, \tau_1, \tau_2) =
+\prod_{i \in I_1} \left( \frac{\tau_1^{1/2}}{\sqrt{2\pi}} \exp\left( -\frac{\tau_1}{2} (Y_i - \mathbf{x}_i^\top \boldsymbol{\beta})^2 \right) \right)
+\prod_{i \in I_2} \left( \frac{\tau_2^{1/2}}{\sqrt{2\pi}} \exp\left( -\frac{\tau_2}{2} (Y_i - \mathbf{x}_i^\top \boldsymbol{\beta})^2 \right) \right)
+$$
+
+This simplifies to:
+
+$$
+L(\mathbf{Y} \mid \boldsymbol{\beta}, \tau_1, \tau_2) \propto \tau_1^{n_1/2} \cdot \tau_2^{n_2/2} \cdot
+\exp\left(
+-\frac{\tau_1}{2} (\mathbf{Y}_1 - \mathbf{X}_1 \boldsymbol{\beta})^\top (\mathbf{Y}_1 - \mathbf{X}_1 \boldsymbol{\beta})
+- \frac{\tau_2}{2} (\mathbf{Y}_2 - \mathbf{X}_2 \boldsymbol{\beta})^\top (\mathbf{Y}_2 - \mathbf{X}_2 \boldsymbol{\beta})
+\right)
+$$
+
+where:
+
+$$
+\Sigma^{-1} = \frac{1}{\det(\text{Data Matrix})} \cdot \operatorname{adj}(\text{Data Matrix})
+$$
+
+$$
+\Sigma^{-1} =
+\begin{bmatrix}
+\tau_1 & 0 & 0 & 0 \\
+0 & \cdots & 0 & 0 \\
+0 & \tau_1 & 0 & 0 \\
+0 & 0 & \tau_2 & 0 \\
+0 & 0 & \cdots & 0 \\
+0 & 0 & 0 & \tau_2
+\end{bmatrix}
+$$
+
+$$
+\Sigma^{-1} =
+\tau_1
+\underbrace{
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & \cdots & 0 & 0 \\
+0 & 1 & 0 & 0 \\
+0 & 0 & 0 & 0 \\
+0 & 0 & \cdots & 0 \\
+0 & 0 & 0 & 0
+\end{bmatrix}
+}_{\text{Matrix A}}
++
+\tau_2
+\underbrace{
+\begin{bmatrix}
+0 & 0 & 0 & 0 \\
+0 & \cdots & 0 & 0 \\
+0 & 0 & 0 & 0 \\
+0 & 0 & 1 & 0 \\
+0 & 0 & \cdots & 0 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+}_{\text{Matrix B}}
+$$
+
+### Posterior Derivations
+
+Case 1: Posterior of $\boldsymbol{\beta} \mid \tau_1, \tau_2, \boldsymbol{X}, \boldsymbol{Y}$
+
+Given the following prior distribution:
+$$\boldsymbol{\beta} \sim \mathcal{N}(\mathbf{0}, \mathbf{T}_0)$$
+which has the unnormalized form:
+$$\pi(\boldsymbol{\beta}) \propto \exp\left( -\frac{1}{2} \boldsymbol{\beta}^\top \mathbf{T}_0^{-1} \boldsymbol{\beta} \right)$$
+The proportional likelihood is given by:
+$$L(\boldsymbol{\beta}, \mathbf{Y}, \mathbf{X}, \Sigma) \propto \exp\left( -\frac{1}{2} \boldsymbol{\beta}^\top \mathbf{X}^\top \Sigma^{-1} \mathbf{X} \boldsymbol{\beta} \right)$$
+Therefore, the posterior is:
+$$\pi(\boldsymbol{\beta}, \tau_1, \tau_2, \boldsymbol{X}, \boldsymbol{Y}) 
+\propto \pi(\boldsymbol{\beta}) \cdot L(\boldsymbol{\beta}, \boldsymbol{Y}, \boldsymbol{X}, \Sigma) 
+\propto \exp\left( -\frac{1}{2} \boldsymbol{\beta}^\top T_0^{-1} \boldsymbol{\beta} \right) 
+\cdot \exp\left( -\frac{1}{2} \boldsymbol{\beta}^\top \boldsymbol{X}^\top \Sigma^{-1} \boldsymbol{X} \boldsymbol{\beta} \right)$$
+$$\mathbf{C} = \mathbf{X}^\top \Sigma^{-1} \mathbf{X} + \mathbf{T}_0^{-1}, \quad
+\mathbf{D} = \mathbf{X}^\top \Sigma^{-1} \mathbf{Y}$$
+$$\boldsymbol{\beta}^\top \mathbf{C} \boldsymbol{\beta} - 2 \boldsymbol{\beta}^\top \mathbf{D} = (\boldsymbol{\beta} - \boldsymbol{\mu}_\beta)^\top \mathbf{C} (\boldsymbol{\beta} - \boldsymbol{\mu}_\beta) - \boldsymbol{\mu}_\beta^\top \mathbf{C} \boldsymbol{\mu}_\beta$$
+where:
+$$\boldsymbol{\mu}_\beta = \mathbf{C}^{-1} \mathbf{D}$$
+The posterior becomes:
+$$\pi(\boldsymbol{\beta} \mid \tau_1, \tau_2, \mathbf{X}, \mathbf{Y}) \propto
+\exp\left( -\frac{1}{2} (\boldsymbol{\beta} - \boldsymbol{\mu}_\beta)^\top \mathbf{C} (\boldsymbol{\beta} - \boldsymbol{\mu}_\beta) \right)$$
+But:
+$\exp\left( -\frac{1}{2} \mu_B^\top C \mu_B \right) \quad \text{is independent of } \boldsymbol{\beta}$
+
+Therefore, the posterior simplifies to: $\pi(\boldsymbol{\beta} \mid \tau_1, \tau_2, \boldsymbol{X}, \boldsymbol{Y}) \propto \exp\left( -\frac{1}{2} (\boldsymbol{\beta} - \mu_B)^\top \left( \boldsymbol{X}^\top \Sigma^{-1} \boldsymbol{X} + T_0^{-1} \right) (\boldsymbol{\beta} - \mu_B) \right)$
+
+This is a Gaussian: $\pi(\boldsymbol{\beta} \mid \tau_1, \tau_2, \boldsymbol{X}, \boldsymbol{Y}) \sim \mathcal{N}(\boldsymbol{\mu_\beta}, \boldsymbol{C}^{-1})$
+
+where:
+$$\boldsymbol{C}^{-1} = \left( \boldsymbol{X}^\top \Sigma^{-1} \boldsymbol{X} + T_0^{-1} \right)^{-1} \quad
+\boldsymbol{\mu_\beta} = \left( \boldsymbol{X}^\top \Sigma^{-1} \boldsymbol{Y} \right) \times \left( \boldsymbol{X}^\top \Sigma^{-1} \boldsymbol{X} + T_0^{-1} \right)$$
+
+For Case 2:) Posterior of $\tau_1 | \boldsymbol{\beta}, \tau_2, \boldsymbol{X}, \boldsymbol{Y}$
+
+Given the following prior distribution:$\tau_1 \sim \text{Gamma}(a, b)$
+
+which has the unnormalized form:
+$$\pi(\tau_1) \propto \tau_1^{a - 1} \exp(-b \tau_1)$$
+The likelihood contribution for group 1 ( n1) is:
+$$L(Y_1, X_1, \boldsymbol{\beta}, \tau_1) \propto \tau_1^{n_1 / 2} \exp\left[ -\frac{\tau_1}{2} (Y_1 - X_1 \beta)^\top (Y_1- X_1 \beta) \right].$$
+Therefore, the posterior is:
+$\pi(\tau_1 \mid \boldsymbol{\beta}, \tau_2, \boldsymbol{X}, \boldsymbol{Y}) \propto \pi(\tau_1 ) \cdot L(Y_1, X_1, \boldsymbol{\beta}, \tau_1),$
+
+$\pi(\tau_1 \mid \boldsymbol{\beta}, \tau_2, \boldsymbol{X}, \boldsymbol{Y}) \propto \tau_1^{a - 1} \exp(-b \tau_1) \cdot \tau_1^{n_1 / 2} \exp\left( -\frac{\tau_1}{2} (Y_1 - X_1 \beta)^\top (Y_1 - X_1 \beta) \right),$
+
+$\pi(\tau_1 \mid \boldsymbol{\beta}, \tau_2, \boldsymbol{X}, \boldsymbol{Y}) \propto \tau_1^{a + n_1 / 2 - 1} \exp\left( -\tau_1 \left( b + \frac{1}{2} (Y_1 - X_1 \beta)^\top (Y_1 - X_1 \beta) \right) \right) .$
+
+The normalized form is: $\pi(\tau_1 \mid \beta, \tau_2, X, Y) \sim \text{Gamma}\left(a + \frac{n_1}{2}, b + \frac{1}{2}(Y_1 - X_1 \beta)^\top (Y_1 - X_1 \beta) \right )$
+
+Case 3: Posterior of $\tau_2 \mid \tau_1, \boldsymbol{\beta}, \boldsymbol{X}, \boldsymbol{Y}$
+
+Given the following prior distribution:
+
+$\tau_2 \mid \tau_1 \sim \text{Gamma}(a, b) \cdot \mathbb{I}(\tau_2 < \tau_1),$
+
+which has the unnormalized form:
+
+$\pi(\tau_2 \mid \tau_1) \propto \tau_2^{a - 1} \exp(-b \tau_2) \cdot \mathbb{I}(\tau_2 < \tau_1)$
+
+The likelihood contribution for group 2 (n2 = n - n1) is:
+
+$L(Y_2, X_2, \boldsymbol{\beta}, \tau_2) \propto \tau_2^{n_2 / 2} \exp\left[ -\frac{\tau_2}{2} (Y_2 - X_2 \beta)^\top (Y_2 - X_2 \beta) \right]$
+
+Therefore, the posterior is:
+
+$\pi(\tau_2 \mid \boldsymbol{\beta}, \tau_1, \boldsymbol{X}, \boldsymbol{Y}) \propto \pi(\tau_2 \mid \tau_1) \cdot L(Y_2, X_2, \boldsymbol{\beta}, \tau_2),$
+
+$\pi(\tau_2 \mid \boldsymbol{\beta}, \tau_1, \boldsymbol{X}, \boldsymbol{Y}) \propto \tau_2^{a - 1} \exp(-b \tau_2) \cdot \tau_2^{n_2 / 2} \exp\left( -\frac{\tau_2}{2} (Y_2 - X_2 \beta)^\top (Y_2 - X_2 \beta) \right) \cdot \mathbb{I}(\tau_2 < \tau_1),$
+
+$\pi(\tau_2 \mid \boldsymbol{\beta}, \tau_1, \boldsymbol{X}, \boldsymbol{Y}) \propto \tau_2^{a + n_2 / 2 - 1} \exp\left( -\tau_2 \left( b + \frac{1}{2} (Y_2 - X_2 \beta)^\top (Y_2 - X_2 \beta) \right) \right) \cdot \mathbb{I}(\tau_2 < \tau_1)$
+
+The normalized form is: $\pi(\tau_2 \mid \beta, \tau_1, X, Y) \sim \text{Truncated-Gamma}\left(a + \frac{n_2}{2}, b + \frac{1}{2}(Y_2 - X_2 \beta)^\top (Y_2 - X_2 \beta) \right )\cdot \mathbb{I}(\tau_2 < \tau_1)$
+
+```{r q3, echo = FALSE}
+set.seed(2021)
+
+# Simulate data (from your code)
+n = 150
+X.c = data.frame(matrix(rnorm(5 * n), ncol = 5))
+colnames(X.c) = c("X1", "X2", "X3", "X4", "X5")
+X = as.matrix(cbind(1, X.c))  # Add intercept
+e = matrix(rnorm(n), ncol = 1)
+beta.true = matrix(c(1, 0, 10, 0, 2, -3), ncol = 1)
+Y = X %*% beta.true + e
+
+
+# Spliting the data into n1 and n-n1 is = n2 for the distributions
+n1 <- 100  
+n2 <- n - n1
+
+#Spliting the data into X1 and X2 for the distributions
+X1 <- X[1:n1, ] 
+X2 <- X[(n1+1):n, ]
+
+#Spliting the data into Y1 and Y1 for the distributions
+Y1 <- Y[1:n1, ]
+Y2 <- Y[(n1+1):n, ]
+
+#Initial values for a and b 
+a <- 2
+b <- 1
+
+
+# Priors distributions
+number_col <- ncol(X)
+T0 <- diag(1000, number_col )  # Prior covariance for beta
+
+#Using 3000 iterations for sample generation
+iterations <- 3000
+beta_samples <- matrix(0, nrow = iterations, ncol = number_col )
+tau1_samples <- numeric(iterations)
+tau2_samples <- numeric(iterations)
+
+beta_parameter <- rep(0, number_col )
+tau1 <- 1
+tau2 <- 0.5
+
+#  sampling  from the posterior using Gibbs sampling
+for (iter in 1:iterations) {
+  # Sample tau1 | beta,X,Y,tau2
+  sigma_1 <- Y1 - X1 %*% beta_parameter
+  shape_parameter1 <- a + n1 / 2
+  rate_parameter_1 <- b + 0.5 * sum(sigma_1^2)
+  tau1 <- rgamma(1, shape =  shape_parameter1, rate = rate_parameter_1)
+  
+  #Sample beta | tau1, tau2, X, Y
+  C <- tau1 * t(X1) %*% X1 + tau2 * t(X2) %*% X2 + solve(T0)
+  C_inverse <- solve(C)
+  mu_parameter <- C_inverse %*% (tau1 * t(X1) %*% Y1 + tau2 * t(X2) %*% Y2)
+  beta_parameter <- as.vector(mvrnorm(1, mu = mu_parameter, Sigma = C_inverse))
+  
+  
+  # Sample tau2 | beta, tau1( where n2 = n-n1)
+  sigma_2 <- Y2 - X2 %*% beta_parameter
+  shape_parameter2<- a + n2 / 2
+  rate_parameter_2 <- b + 0.5 * sum(sigma_2^2)
+  tau2 <- rgamma(1, shape = shape_parameter2, rate = rate_parameter_2 )
+
+  # To get posterior samples
+  beta_samples[iter, ] <- beta_parameter
+  tau1_samples[iter] <- tau1
+  tau2_samples[iter] <- tau2
+}
+
+col_labels <- c("$\\beta_0$", "$\\beta_1$", "$\\beta_2$", 
+					 "$\\beta_3$", "$\\beta_4$", "$\\beta_5$")
+
+kable(head(beta_samples), 
+		digits = 3, 
+		caption = 'First six rows of the $\\beta$ sample values', 
+		col.names = col_labels)
+
+kable(head(tau1_samples), 
+		digits = 3,
+		caption = 'First six rows of $\\tau_1$ sample values', 
+		col.names = c('$\\tau_1$'))
+
+kable(head(tau2_samples), 
+		digits = 3,
+		caption = 'First six rows of $\\tau_2$ sample values', 
+		col.names = c('$\\tau_2$'))
+```
+
 \newpage
 
 # Plagiarism Declaration
@@ -661,7 +911,7 @@ notable change would be which cell we search.
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{../images/Signature_Laylaa.jpg}\\
+\includegraphics[width=0.15\textwidth]{Signature_Laylaa.jpg}\\
 Signature: Jorge Abrahams Laylaa (JRGLAY001)
 \end{flushleft}
 ```
@@ -682,7 +932,7 @@ Signature: Jorge Abrahams Laylaa (JRGLAY001)
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{../images/Signature_Sbonelo.jpg}\\
+\includegraphics[width=0.15\textwidth]{Signature_Sbonelo.jpg}\\
 Signature: Gumede Sbonelo (GMDSBO006)
 \end{flushleft}
 ```
@@ -703,7 +953,7 @@ Signature: Gumede Sbonelo (GMDSBO006)
 
 ```{=latex}
 \begin{flushleft}
-\includegraphics[width=0.15\textwidth]{../images/Signature_Sbonelo.jpg}\\
+\includegraphics[width=0.15\textwidth]{Signature_Khethani.jpg}\\
 Signature: Mugeri Khethani (MGRKHE001)
 \end{flushleft}
 ```
